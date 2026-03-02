@@ -31,7 +31,7 @@ class JetStreamService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(1, createNotification())
         // TODO: Replace with your PC's IP address!
-        connectToPc("192.168.1.5")
+        connectToPc("192.168.154.41")
         setupClipboardListener()
         return START_STICKY
     }
@@ -53,7 +53,7 @@ class JetStreamService : Service() {
         serviceScope.launch {
             try {
                 // Using port 8080 as per typical Rust websocket defaults
-                client.webSocket(method = HttpMethod.Get, host = host, port = 8080, path = "/") {
+                client.webSocket(method = HttpMethod.Get, host = host, port = 8000, path = "/") {
                     session = this
                     for (frame in incoming) { /* Listening for PC replies */ }
                 }
