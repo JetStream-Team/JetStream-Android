@@ -7,6 +7,7 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 
 class JetStreamService: Service() {
@@ -16,6 +17,8 @@ class JetStreamService: Service() {
     override fun onBind(intent: Intent) = LocalBinder()
 
     private val CHANNEL_ID = "JetStreamService"
+
+    val connected = mutableStateOf(false)
 
     override fun onCreate() {
         super.onCreate()
@@ -53,11 +56,13 @@ class JetStreamService: Service() {
         println("Connected")
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(1, buildNotification("Connected"))
+        connected.value = true
     }
 
     fun wsDisconnect() {
         println("Disconnected")
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(1, buildNotification("Connected"))
+        connected.value = false
     }
 }

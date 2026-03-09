@@ -13,12 +13,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -127,6 +129,19 @@ fun MainScreen(modifier: Modifier = Modifier, runningService: JetStreamService? 
             ) {
                 Text("Disconnect")
             }
+        }
+
+        Surface(
+            color = if (runningService?.connected?.value == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+            shape = RoundedCornerShape(8.dp)
+        ) {
+
+            Text(
+                text = if (runningService?.connected?.value == true) "Status: Connected" else "Status: Disconnected",
+                modifier = Modifier.padding(8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (runningService?.connected?.value == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
         }
     }
 }
