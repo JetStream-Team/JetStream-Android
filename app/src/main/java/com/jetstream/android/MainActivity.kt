@@ -2,10 +2,8 @@ package com.jetstream.android
 
 import android.Manifest
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
@@ -13,7 +11,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,10 +31,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.jetstream.android.ui.theme.JetStreamTheme
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +55,7 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, JetStreamService::class.java)
         startForegroundService(intent)
 
-        bindService(Intent(this, JetStreamService::class.java), connection, Context.BIND_AUTO_CREATE)
+        bindService(Intent(this, JetStreamService::class.java), connection, BIND_AUTO_CREATE)
 
         enableEdgeToEdge()
         setContent {
