@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.wire)
 }
 
 android {
@@ -35,6 +36,13 @@ android {
     }
 }
 
+wire {
+    sourcePath {
+        srcDir("src/main/proto")
+    }
+    kotlin { }  // generate Kotlin classes
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -44,5 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.okhttp)
+    implementation(libs.wire.runtime)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

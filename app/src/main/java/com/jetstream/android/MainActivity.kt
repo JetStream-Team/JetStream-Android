@@ -33,35 +33,54 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.jetstream.android.ui.theme.JetStreamTheme
 
 class MainActivity : ComponentActivity() {
-    private var runningService by mutableStateOf<JetStreamService?>(null)
+    private var fgService: JetStreamService? by mutableStateOf(null)
+    private var isBound = false
 
+    // Private connection object to store the connection to the service
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            runningService = (service as JetStreamService.LocalBinder).getService()
+            fgService = (service as JetStreamService.LocalBinder).getService()
+            isBound = true
+            println("MainActivity bound to JetStreamService")
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            runningService = null
+            fgService = null
+            isBound = false
+            println("MainActivity unbound from JetStreamService")
+        }
+    }
+
+    // Bind to the service on startup
+    override fun onStart() {
+        super.onStart()
+        bindService(Intent(this, JetStreamService::class.java), connection, BIND_AUTO_CREATE)
+    }
+
+    // Unbind from the service on stop
+    override fun onStop() {
+        super.onStop()
+        if (isBound) {
+            unbindService(connection)
+            isBound = false
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Start service as soon as the app is opened
-        val intent = Intent(this, JetStreamService::class.java)
-        startForegroundService(intent)
-
-        bindService(Intent(this, JetStreamService::class.java), connection, BIND_AUTO_CREATE)
+        // Start the service at startup
+        ContextCompat.startForegroundService(this, Intent(this, JetStreamService::class.java))
 
         enableEdgeToEdge()
         setContent {
             JetStreamTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding), runningService)
+                    MainScreen(modifier = Modifier.padding(innerPadding), fgService)
                 }
             }
         }
@@ -69,8 +88,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, runningService: JetStreamService? = null) {
-    var text by remember { mutableStateOf("") }
+fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = null) {
+    var serverIP by remember { mutableStateOf("") }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
@@ -94,8 +113,8 @@ fun MainScreen(modifier: Modifier = Modifier, runningService: JetStreamService? 
         )
 
         OutlinedTextField (
-            value = text,
-            onValueChange = { text = it },
+            value = serverIP,
+            onValueChange = { serverIP = it },
             label = { Text("Server Address") },
             placeholder = { Text("eg: 192.168.1.10") },
             modifier = Modifier.fillMaxWidth()
@@ -107,35 +126,34 @@ fun MainScreen(modifier: Modifier = Modifier, runningService: JetStreamService? 
         ) {
             Button(
                 onClick = {
-                    runningService?.wsConnect()
+                    fgService?.wsConnect(serverIP)
                 },
                 modifier = Modifier.weight(1f),
-                enabled = text.isNotEmpty()
+                enabled = serverIP.isNotEmpty()
             ) {
                 Text("Connect")
             }
 
             Button(
                 onClick = {
-                    runningService?.wsDisconnect()
+                    fgService?.wsDisconnect()
                 },
                 modifier = Modifier.weight(1f),
-                enabled = text.isNotEmpty()
+                enabled = serverIP.isNotEmpty()
             ) {
                 Text("Disconnect")
             }
         }
 
         Surface(
-            color = if (runningService?.connected?.value == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+            color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
             shape = RoundedCornerShape(8.dp)
         ) {
-
             Text(
-                text = if (runningService?.connected?.value == true) "Status: Connected" else "Status: Disconnected",
+                text = if (fgService?.isConnected == true) "Status: Connected" else "Status: Disconnected",
                 modifier = Modifier.padding(8.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (runningService?.connected?.value == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
         }
     }
