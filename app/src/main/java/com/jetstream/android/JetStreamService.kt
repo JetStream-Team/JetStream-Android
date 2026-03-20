@@ -13,7 +13,14 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okio.ByteString
 
-class JetStreamService: Service() {
+const val PORT = 8000
+
+interface WSCallback {
+    fun onConnected()
+    fun onDisconnected()
+}
+
+class JetStreamService: Service(), WSCallback {
     // Binder setup
     inner class LocalBinder : Binder() { fun getService() = this@JetStreamService }
     override fun onBind(intent: Intent) = LocalBinder()
@@ -23,18 +30,20 @@ class JetStreamService: Service() {
 
     private val wsClient = OkHttpClient()
     private var webSocket: WebSocket? = null
-    fun suicide() { webSocket = null }
 
     var isConnected by mutableStateOf(false)
-    fun setStatus(newStatus: Boolean) {
-        isConnected = newStatus
-        if (newStatus) {
-            getSystemService(NotificationManager::class.java)
-                .notify(1, buildNotification("Connected"))
-        } else {
-            getSystemService(NotificationManager::class.java)
-                .notify(1, buildNotification("Disconnected"))
-        }
+
+    override fun onConnected() {
+        webSocket?.let { isConnected = true }
+        getSystemService(NotificationManager::class.java)
+            .notify(1, buildNotification("Connected"))
+    }
+
+    override fun onDisconnected() {
+        webSocket = null
+        isConnected = false
+        getSystemService(NotificationManager::class.java)
+            .notify(1, buildNotification("Disconnected"))
     }
 
     override fun onCreate() {
@@ -49,15 +58,17 @@ class JetStreamService: Service() {
             NotificationManager.IMPORTANCE_LOW
         )
 
+        // Register notification channel with system
         getSystemService(NotificationManager::class.java)
             .createNotificationChannel(serviceChannel)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        if (isRunning) {
-            return START_STICKY
-        }
+        // Don't restart service if it's already running
+        if (isRunning) { return START_STICKY }
+
+        isRunning = true
 
         println("JetStream Service started")
 
@@ -68,6 +79,22 @@ class JetStreamService: Service() {
         startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
 
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Stop WebSocket connection
+        webSocket?.close(1000, "Service Stopping")
+        webSocket = null
+
+        isRunning = false
+
+        // Shutdown WebSocket client
+        wsClient.dispatcher.executorService.shutdown()
+        wsClient.connectionPool.evictAll()
+
+        println("JetStream Service destroyed")
     }
 
     fun buildNotification(description: String): Notification {
@@ -84,9 +111,9 @@ class JetStreamService: Service() {
             return
         }
 
-        val request = Request.Builder().url("ws://$serverIP:8000/").build()
-
-        webSocket = wsClient.newWebSocket(request, WSListener(::setStatus, ::suicide))
+        // Create WebSocket connection
+        val request = Request.Builder().url("ws://$serverIP:$PORT/").build()
+        webSocket = wsClient.newWebSocket(request, WSListener(this))
     }
 
     fun wsDisconnect() {
@@ -95,20 +122,13 @@ class JetStreamService: Service() {
             return
         }
 
-        webSocket?.close(0, "Client disconnected")
-    }
-
-    fun sendMessage(data: String): Boolean {
-        val ws = webSocket ?: return false
-        return ws.send(data)
-    }
-
-    fun sendMessage(data: ByteString): Boolean {
-        val ws = webSocket ?: return false
-        return ws.send(data)
+        // Close WebSocket connection
+        webSocket?.close(1000, "Client disconnected")
+        webSocket = null
     }
 
     fun sendMessage(data: ByteArray): Boolean {
-        return sendMessage(ByteString.of(*data))
+        val ws = webSocket ?: return false
+        return ws.send(ByteString.of(*data))
     }
 }

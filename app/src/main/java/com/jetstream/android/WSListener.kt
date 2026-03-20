@@ -5,26 +5,23 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 
-class WSListener(
-    private val setConnected: (Boolean) -> Unit,
-    private val suicide: () -> Unit
-): WebSocketListener() {
+class WSListener(private val callback: WSCallback): WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         println("WebSocket Opened")
-        setConnected(true)
+        callback.onConnected()
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosing(webSocket, code, reason)
         println("WebSocket Closing")
-        setConnected(false)
+        callback.onDisconnected()
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
         println("WebSocket Closed")
-        setConnected(false)
+        callback.onDisconnected()
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
@@ -40,7 +37,6 @@ class WSListener(
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
         println("WebSocket Failure: ${t.message}")
-        setConnected(false)
-        suicide()
+        callback.onDisconnected()
     }
 }

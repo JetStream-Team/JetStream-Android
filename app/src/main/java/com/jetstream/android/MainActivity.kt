@@ -19,11 +19,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -129,7 +132,7 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
                     fgService?.wsConnect(serverIP)
                 },
                 modifier = Modifier.weight(1f),
-                enabled = serverIP.isNotEmpty()
+                enabled = fgService?.isConnected == false && serverIP.isNotEmpty()
             ) {
                 Text("Connect")
             }
@@ -139,21 +142,30 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
                     fgService?.wsDisconnect()
                 },
                 modifier = Modifier.weight(1f),
-                enabled = serverIP.isNotEmpty()
+                enabled = fgService?.isConnected == true
             ) {
                 Text("Disconnect")
             }
         }
 
+        OutlinedButton(
+            onClick = {
+                serverIP = "192.168.1.10"
+                fgService?.wsConnect("192.168.1.10")
+            },
+        ) {
+            Text("Connect to 192.168.1.10")
+        }
+
         Surface(
-            color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+            color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 text = if (fgService?.isConnected == true) "Status: Connected" else "Status: Disconnected",
                 modifier = Modifier.padding(8.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError
             )
         }
     }

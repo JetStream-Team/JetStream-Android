@@ -11,6 +11,11 @@ import android.service.notification.StatusBarNotification
 import com.jetstream.android.proto.MessageWrapper
 import com.jetstream.android.proto.Notification as JetStreamNotification
 
+val exclude_packages = arrayOf(
+    ""
+//    "com.drnoob.datamonitor"
+)
+
 class JetStreamNotificationListener : NotificationListenerService() {
 
     private var jetStreamService: JetStreamService? = null
@@ -47,27 +52,45 @@ class JetStreamNotificationListener : NotificationListenerService() {
         }
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification) {
-        println("Notification posted: ${sbn.packageName}")
+    fun filterNotification(sbn: StatusBarNotification): Boolean {
 
-        val service = jetStreamService ?: return
-        if (!service.isConnected) return
+        // Filter out if the service is not running or connected
+        val service = jetStreamService ?: return true
+        if (!service.isConnected) return true
 
         // Skip notifications posted by JetStream itself to avoid loops
-        if (sbn.packageName == packageName) return
+        if (sbn.packageName == packageName) return true
 
-        // TODO exclude spammy notifications
-        if (sbn.packageName == "com.drnoob.datamonitor") return
+        // Skip spammy applications
+        if (sbn.packageName in exclude_packages) return true
 
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
 
         // Skip notifications without any content or title
-        if (title.isEmpty() && body.isEmpty()) return
+        if (title.isEmpty() && body.isEmpty()) return true
+
+        return false
+    }
+
+    override fun onNotificationPosted(sbn: StatusBarNotification) {
+        println("Notification posted: ${sbn.packageName}")
+
+        // Filter out certain notifications
+        if (filterNotification(sbn)) return
+
+        val service = jetStreamService ?: return
+        if (!service.isConnected) return
+
+        val extras = sbn.notification.extras
+        val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
+        val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
 
         val wrapper = MessageWrapper(
             notification = JetStreamNotification(
+                create = true,
+                id = sbn.id,
                 title = title,
                 body = body
             )
@@ -78,16 +101,26 @@ class JetStreamNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        // Optional: notify the peer that a notification was dismissed
-//        val service = jetStreamService ?: return
-//        if (!service.isConnected) return
-//
-//        val payload = JSONObject().apply {
-//            put("type", "notification_removed")
-//            put("package", sbn.packageName)
-//            put("postedAt", sbn.postTime)
-//        }.toString()
-//
-//        service.sendMessage(payload)
+        println("Notification removed: ${sbn.packageName}")
+
+        // Filter out certain notifications
+        if (filterNotification(sbn)) return
+
+        val service = jetStreamService ?: return
+        if (!service.isConnected) return
+
+        val extras = sbn.notification.extras
+
+        val wrapper = MessageWrapper(
+            notification = JetStreamNotification(
+                create = false,
+                id = sbn.id,
+                title = "",
+                body = ""
+            )
+        )
+        val bytes = MessageWrapper.ADAPTER.encode(wrapper)
+        val sent = service.sendMessage(bytes)
+        println("Notification removal forwarded [${sbn.packageName}] sent=$sent")
     }
 }
