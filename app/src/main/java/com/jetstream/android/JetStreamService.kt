@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -49,7 +50,7 @@ class JetStreamService: Service(), WSCallback {
     override fun onCreate() {
         super.onCreate()
 
-        println("JetStream Service created")
+        Log.d("JetStreamService", "JetStreamService created")
 
         // Create notification channel
         val serviceChannel = NotificationChannel(
@@ -70,7 +71,7 @@ class JetStreamService: Service(), WSCallback {
 
         isRunning = true
 
-        println("JetStream Service started")
+        Log.d("JetStreamService",  "JetStreamService started")
 
         // Create notification
         val notification = buildNotification("Disconnected")
@@ -94,7 +95,7 @@ class JetStreamService: Service(), WSCallback {
         wsClient.dispatcher.executorService.shutdown()
         wsClient.connectionPool.evictAll()
 
-        println("JetStream Service destroyed")
+        Log.d("JetStreamService", "JetStreamService destroyed")
     }
 
     fun buildNotification(description: String): Notification {
@@ -107,7 +108,7 @@ class JetStreamService: Service(), WSCallback {
 
     fun wsConnect(serverIP: String) {
         if (webSocket != null) {
-            println("WebSocket already connected")
+            Log.w("JetStreamService", "WebSocket already connected")
             return
         }
 
@@ -118,13 +119,12 @@ class JetStreamService: Service(), WSCallback {
 
     fun wsDisconnect() {
         if (webSocket == null) {
-            println("No WebSocket connection to close")
+            Log.w("JetStreamService", "No WebSocket connection to close")
             return
         }
 
         // Close WebSocket connection
         webSocket?.close(1000, "Client disconnected")
-        webSocket = null
     }
 
     fun sendMessage(data: ByteArray): Boolean {

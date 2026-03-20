@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -48,13 +49,13 @@ class MainActivity : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             fgService = (service as JetStreamService.LocalBinder).getService()
             isBound = true
-            println("MainActivity bound to JetStreamService")
+            Log.d("MainActivity", "Bound to JetStreamService")
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
             fgService = null
             isBound = false
-            println("MainActivity unbound from JetStreamService")
+            Log.d("MainActivity", "Unbound from JetStreamService")
         }
     }
 
