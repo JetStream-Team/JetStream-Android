@@ -12,12 +12,16 @@ import android.util.Log
 import com.jetstream.android.proto.MessageWrapper
 import com.jetstream.android.proto.Notification as JetStreamNotification
 
-val exclude_packages = arrayOf(
-    "",
-    "com.drnoob.datamonitor"
-)
-
 class JetStreamNotificationListener : NotificationListenerService() {
+    private val tag = "JetStreamNotificationListener"
+
+    // Companion objects are static i.e. shared across instances
+    companion object {
+        private val EXCLUDE_PACKAGES = setOf(
+            "",
+            "com.drnoob.datamonitor"
+        )
+    }
 
     private var jetStreamService: JetStreamService? = null
     private var isBound = false
@@ -26,13 +30,13 @@ class JetStreamNotificationListener : NotificationListenerService() {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             jetStreamService = (binder as JetStreamService.LocalBinder).getService()
             isBound = true
-            Log.d("JetStreamNotificationListener", "Bound to JetStreamService")
+            Log.d(tag, "Bound to JetStreamService")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             jetStreamService = null
             isBound = false
-            Log.d("JetStreamNotificationListener", "Unbound from JetStreamService")
+            Log.d(tag, "Unbound from JetStreamService")
         }
     }
 
@@ -41,7 +45,7 @@ class JetStreamNotificationListener : NotificationListenerService() {
         Intent(this, JetStreamService::class.java).also { intent ->
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
-        Log.d("JetStreamNotificationListener", "Listener connected")
+        Log.d(tag, "Listener connected")
     }
 
     override fun onListenerDisconnected() {
@@ -49,11 +53,11 @@ class JetStreamNotificationListener : NotificationListenerService() {
         if (isBound) {
             unbindService(serviceConnection)
             isBound = false
-            Log.d("JetStreamNotificationListener", "Listener disconnected")
+            Log.d(tag, "Listener disconnected")
         }
     }
 
-    fun filterNotification(sbn: StatusBarNotification): Boolean {
+    private fun filterNotification(sbn: StatusBarNotification): Boolean {
 
         // Filter out if the service is not running or connected
         val service = jetStreamService ?: return true
@@ -63,7 +67,7 @@ class JetStreamNotificationListener : NotificationListenerService() {
         if (sbn.packageName == packageName) return true
 
         // Skip spammy applications
-        if (sbn.packageName in exclude_packages) return true
+        if (sbn.packageName in EXCLUDE_PACKAGES) return true
 
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
@@ -79,10 +83,9 @@ class JetStreamNotificationListener : NotificationListenerService() {
         // Filter out certain notifications
         if (filterNotification(sbn)) return
 
-        Log.d("JetStreamNotificationListener", "Notification posted: ${sbn.packageName}")
+        Log.d(tag, "Notification posted: ${sbn.packageName}")
 
         val service = jetStreamService ?: return
-        if (!service.isConnected) return
 
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
@@ -98,17 +101,16 @@ class JetStreamNotificationListener : NotificationListenerService() {
         )
         val bytes = MessageWrapper.ADAPTER.encode(wrapper)
         service.sendMessage(bytes)
-        Log.d("JetStreamNotificationListener", "Notification forwarded: ${sbn.packageName}")
+        Log.d(tag, "Notification forwarded: ${sbn.packageName}")
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        Log.d("JetStreamNotificationListener", "Notification removed: ${sbn.packageName}")
+        Log.d(tag, "Notification removed: ${sbn.packageName}")
 
         // Filter out certain notifications
         if (filterNotification(sbn)) return
 
         val service = jetStreamService ?: return
-        if (!service.isConnected) return
 
         val wrapper = MessageWrapper(
             notification = JetStreamNotification(
@@ -119,7 +121,7 @@ class JetStreamNotificationListener : NotificationListenerService() {
             )
         )
         val bytes = MessageWrapper.ADAPTER.encode(wrapper)
-        val sent = service.sendMessage(bytes)
-        Log.d("JetStreamNotificationListener", "Notification removal forwarded: ${sbn.packageName}")
+        service.sendMessage(bytes)
+        Log.d(tag, "Notification removal forwarded: ${sbn.packageName}")
     }
 }

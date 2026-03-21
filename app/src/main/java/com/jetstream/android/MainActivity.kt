@@ -20,14 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,25 +39,26 @@ import androidx.core.content.ContextCompat
 import com.jetstream.android.ui.theme.JetStreamTheme
 
 class MainActivity : ComponentActivity() {
-    private var fgService: JetStreamService? by mutableStateOf(null)
+    private val tag = "MainActivity"
+    private var jetStreamService: JetStreamService? by mutableStateOf(null)
     private var isBound = false
 
     // Private connection object to store the connection to the service
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            fgService = (service as JetStreamService.LocalBinder).getService()
+            jetStreamService = (service as JetStreamService.LocalBinder).getService()
             isBound = true
-            Log.d("MainActivity", "Bound to JetStreamService")
+            Log.d(tag, "Bound to JetStreamService")
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            fgService = null
+            jetStreamService = null
             isBound = false
-            Log.d("MainActivity", "Unbound from JetStreamService")
+            Log.d(tag, "Unbound from JetStreamService")
         }
     }
 
-    // Bind to the service on startup
+    // Bind to the service on start
     override fun onStart() {
         super.onStart()
         bindService(Intent(this, JetStreamService::class.java), connection, BIND_AUTO_CREATE)
@@ -84,7 +83,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             JetStreamTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding), fgService)
+                    MainScreen(modifier = Modifier.padding(innerPadding), jetStreamService)
                 }
             }
         }
@@ -152,7 +151,7 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
         OutlinedButton(
             onClick = {
                 serverIP = "192.168.1.10"
-                fgService?.wsConnect("192.168.1.10")
+                fgService?.wsConnect(serverIP)
             },
         ) {
             Text("Connect to 192.168.1.10")

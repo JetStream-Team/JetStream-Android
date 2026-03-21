@@ -22,17 +22,17 @@ interface WSCallback {
 }
 
 class JetStreamService: Service(), WSCallback {
-    // Binder setup
+    private val tag = "JetStreamService"
+
     inner class LocalBinder : Binder() { fun getService() = this@JetStreamService }
     override fun onBind(intent: Intent) = LocalBinder()
 
-    private val CHANNEL_ID = "JetStreamService"
-    private var isRunning = false
+    private var isRunning = false // Whether the service is running
 
     private val wsClient = OkHttpClient()
     private var webSocket: WebSocket? = null
 
-    var isConnected by mutableStateOf(false)
+    var isConnected by mutableStateOf(false) // Whether the websocket is connected
 
     override fun onConnected() {
         webSocket?.let { isConnected = true }
@@ -50,11 +50,11 @@ class JetStreamService: Service(), WSCallback {
     override fun onCreate() {
         super.onCreate()
 
-        Log.d("JetStreamService", "JetStreamService created")
+        Log.d(tag, "JetStreamService created")
 
         // Create notification channel
         val serviceChannel = NotificationChannel(
-            CHANNEL_ID,
+            tag,
             "Connectivity Service",
             NotificationManager.IMPORTANCE_LOW
         )
@@ -71,7 +71,7 @@ class JetStreamService: Service(), WSCallback {
 
         isRunning = true
 
-        Log.d("JetStreamService",  "JetStreamService started")
+        Log.d(tag,  "JetStreamService started")
 
         // Create notification
         val notification = buildNotification("Disconnected")
@@ -95,11 +95,11 @@ class JetStreamService: Service(), WSCallback {
         wsClient.dispatcher.executorService.shutdown()
         wsClient.connectionPool.evictAll()
 
-        Log.d("JetStreamService", "JetStreamService destroyed")
+        Log.d(tag, "JetStreamService destroyed")
     }
 
     fun buildNotification(description: String): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, tag)
             .setContentTitle("JetStream")
             .setContentText(description)
             .setSmallIcon(R.drawable.ic_notification_foreground)
@@ -108,7 +108,7 @@ class JetStreamService: Service(), WSCallback {
 
     fun wsConnect(serverIP: String) {
         if (webSocket != null) {
-            Log.w("JetStreamService", "WebSocket already connected")
+            Log.w(tag, "WebSocket already connected")
             return
         }
 
@@ -119,7 +119,7 @@ class JetStreamService: Service(), WSCallback {
 
     fun wsDisconnect() {
         if (webSocket == null) {
-            Log.w("JetStreamService", "No WebSocket connection to close")
+            Log.w(tag, "No WebSocket connection to close")
             return
         }
 
