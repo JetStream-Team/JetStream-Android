@@ -114,7 +114,7 @@ class JetStreamService: Service(), WSCallback {
 
         // Create WebSocket connection
         val request = Request.Builder().url("ws://$serverIP:$PORT/").build()
-        webSocket = wsClient.newWebSocket(request, WSListener(this))
+        webSocket = wsClient.newWebSocket(request, WSListener(this, applicationContext))
     }
 
     fun wsDisconnect() {

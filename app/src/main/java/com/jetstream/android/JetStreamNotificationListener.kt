@@ -5,11 +5,16 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Bitmap
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.graphics.drawable.toBitmap
 import com.jetstream.android.proto.MessageWrapper
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
+import java.io.ByteArrayOutputStream
 import com.jetstream.android.proto.Notification as JetStreamNotification
 
 class JetStreamNotificationListener : NotificationListenerService() {
@@ -90,13 +95,23 @@ class JetStreamNotificationListener : NotificationListenerService() {
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+        val iconBytes = sbn.notification.smallIcon
+            ?.loadDrawable(this)
+            ?.toBitmap(width = 48, height = 48)
+            ?.let { bitmap ->
+                ByteArrayOutputStream().use { stream ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    stream.toByteArray().toByteString()
+                }
+            } ?: ByteString.EMPTY
 
         val wrapper = MessageWrapper(
             notification = JetStreamNotification(
                 create = true,
                 id = sbn.id,
                 title = title,
-                body = body
+                body = body,
+                icon = iconBytes
             )
         )
         val bytes = MessageWrapper.ADAPTER.encode(wrapper)

@@ -1,12 +1,18 @@
 package com.jetstream.android
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 
-class WSListener(private val callback: WSCallback): WebSocketListener() {
+class WSListener(private val callback: WSCallback, private val context: Context): WebSocketListener() {
     private val tag = "WSListener"
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -18,7 +24,6 @@ class WSListener(private val callback: WSCallback): WebSocketListener() {
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosing(webSocket, code, reason)
         Log.d(tag, "WebSocket Closing")
-        callback.onDisconnected()
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -41,5 +46,8 @@ class WSListener(private val callback: WSCallback): WebSocketListener() {
         super.onFailure(webSocket, t, response)
         Log.e(tag, "WebSocket Failure: ${t.message}")
         callback.onDisconnected()
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, "Connection failed: ${t.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 }

@@ -10,8 +10,19 @@
       android:translateY="4.0005">
     <path
         android:pathData="M4.762,14.288a9.525,9.525 0,1 0,19.05 0a9.525,9.525 0,1 0,-19.05 0z"
-        android:strokeWidth="0.280964"
-        android:fillColor="#000499"/>
+        android:strokeWidth="0.280964">
+      <aapt:attr name="android:fillColor">
+        <gradient
+            android:centerX="14.287"
+            android:centerY="14.287"
+            android:gradientRadius="9.525"
+            android:type="radial">
+          <item android:offset="0" android:color="#FF06164E"/>
+          <item android:offset="0.336" android:color="#FF091E73"/>
+          <item android:offset="1" android:color="#FF0D2796"/>
+        </gradient>
+      </aapt:attr>
+    </path>
     <group>
       <clip-path
           android:pathData="M4.762,14.288a9.525,9.525 0,1 0,19.05 0a9.525,9.525 0,1 0,-19.05 0z"/>
@@ -19,7 +30,7 @@
           android:pathData="m3.324,22.362c0,0 3.906,-5.535 7.072,-6.523 2.87,-0.896 6.006,2.194 8.884,1.324 3.864,-1.168 7.445,-8.675 7.445,-8.675"
           android:strokeWidth="2.64583"
           android:fillColor="#00000000"
-          android:strokeColor="#179299"
+          android:strokeColor="#42e2b8"
           android:fillType="evenOdd"
           android:strokeLineCap="butt"/>
       <path
@@ -33,7 +44,7 @@
           android:pathData="m2.53,20.245c0,0 3.906,-5.535 7.072,-6.523 2.87,-0.896 6.006,2.194 8.884,1.324 3.864,-1.168 7.445,-8.675 7.445,-8.675"
           android:strokeWidth="2.64583"
           android:fillColor="#00000000"
-          android:strokeColor="#e64553"
+          android:strokeColor="#f1fec2"
           android:fillType="evenOdd"
           android:strokeLineCap="butt"/>
       <path
@@ -47,7 +58,7 @@
           android:pathData="m1.736,18.128c0,0 3.906,-5.535 7.072,-6.523 2.87,-0.896 6.006,2.194 8.884,1.324 3.864,-1.168 7.445,-8.675 7.445,-8.675"
           android:strokeWidth="2.64583"
           android:fillColor="#00000000"
-          android:strokeColor="#8839ef"
+          android:strokeColor="#fb4b4e"
           android:fillType="evenOdd"
           android:strokeLineCap="butt"/>
       <path
