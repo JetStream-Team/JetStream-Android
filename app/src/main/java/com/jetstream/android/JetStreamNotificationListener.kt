@@ -115,8 +115,8 @@ class JetStreamNotificationListener : NotificationListenerService() {
             )
         )
         val bytes = MessageWrapper.ADAPTER.encode(wrapper)
-        service.sendMessage(bytes)
-        Log.d(tag, "Notification forwarded: ${sbn.packageName}")
+        val sent = service.sendMessage(bytes)
+        Log.d(tag, "Notification forwarded: ${sbn.packageName}, sent=$sent")
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
@@ -136,7 +136,7 @@ class JetStreamNotificationListener : NotificationListenerService() {
             )
         )
         val bytes = MessageWrapper.ADAPTER.encode(wrapper)
-        service.sendMessage(bytes)
-        Log.d(tag, "Notification removal forwarded: ${sbn.packageName}")
+        val sent = service.sendMessage(bytes)
+        Log.d(tag, "Notification removal forwarded: ${sbn.packageName}, sent=$sent")
     }
 }

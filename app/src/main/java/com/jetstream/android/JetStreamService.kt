@@ -57,6 +57,7 @@ class JetStreamService : Service(), WSCallback {
     override fun onDisconnected() {
         webSocket = null
         isConnected = false
+        serverInfo = null
         getSystemService(NotificationManager::class.java)
             .notify(1, buildNotification("Disconnected"))
     }
