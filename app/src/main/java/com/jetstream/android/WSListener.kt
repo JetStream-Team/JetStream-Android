@@ -20,6 +20,8 @@ class WSListener(
 ): WebSocketListener() {
     private val tag = "WSListener"
 
+    private var waitingForIdentity = true
+
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         Log.d(tag, "WebSocket Opened")
@@ -39,7 +41,7 @@ class WSListener(
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         super.onMessage(webSocket, bytes)
-        try {
+        if (waitingForIdentity) {
             val identification = JetStreamIdentity.ADAPTER.decode(bytes)
             Log.d(tag, "Identified server: ${identification.name} at ${identification.host}:${identification.port}")
             val server = ServerInfo(
@@ -47,10 +49,11 @@ class WSListener(
                 host = identification.host,
                 port = identification.port
             )
+            waitingForIdentity = false
             callback.setIdentity(server)
-        } catch (e: IOException) {
-            Log.e(tag, "Failed to decode identification message: ${e.message}")
+            return
         }
+
         Log.d(tag, "WebSocket Message Received as Bytes")
     }
 
