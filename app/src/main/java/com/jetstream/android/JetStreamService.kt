@@ -6,6 +6,7 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
@@ -16,12 +17,18 @@ import okio.ByteString
 
 const val PORT = 8000
 
+data class DiscoveredServer(
+    val name: String,
+    val host: String,
+    val port: Int
+)
+
 interface WSCallback {
     fun onConnected()
     fun onDisconnected()
 }
 
-class JetStreamService: Service(), WSCallback {
+class JetStreamService : Service(), WSCallback {
     private val tag = "JetStreamService"
 
     inner class LocalBinder : Binder() { fun getService() = this@JetStreamService }
@@ -32,7 +39,23 @@ class JetStreamService: Service(), WSCallback {
     private val wsClient = OkHttpClient()
     private var webSocket: WebSocket? = null
 
-    var isConnected by mutableStateOf(false) // Whether the websocket is connected
+    var isConnected by mutableStateOf(false)
+
+    val discoveredServers = mutableStateListOf<DiscoveredServer>()
+
+    private val discovery by lazy {
+        JetStreamDiscovery(
+            context = this,
+            onFound = { server ->
+                if (discoveredServers.none { it.name == server.name }) {
+                    discoveredServers.add(server)
+                }
+            },
+            onLost = { name ->
+                discoveredServers.removeAll { it.name == name }
+            }
+        )
+    }
 
     override fun onConnected() {
         webSocket?.let { isConnected = true }
@@ -49,7 +72,6 @@ class JetStreamService: Service(), WSCallback {
 
     override fun onCreate() {
         super.onCreate()
-
         Log.d(tag, "JetStreamService created")
 
         // Create notification channel
@@ -70,40 +92,38 @@ class JetStreamService: Service(), WSCallback {
         if (isRunning) { return START_STICKY }
 
         isRunning = true
-
-        Log.d(tag,  "JetStreamService started")
-
-        // Create notification
-        val notification = buildNotification("Disconnected")
+        Log.d(tag, "JetStreamService started")
 
         // Start foreground service with the notification
-        startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        startForeground(1, buildNotification("Disconnected"), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
-        // Stop WebSocket connection
+        discovery.stop()
         webSocket?.close(1000, "Service Stopping")
         webSocket = null
-
         isRunning = false
-
-        // Shutdown WebSocket client
         wsClient.dispatcher.executorService.shutdown()
         wsClient.connectionPool.evictAll()
-
         Log.d(tag, "JetStreamService destroyed")
     }
 
-    fun buildNotification(description: String): Notification {
-        return NotificationCompat.Builder(this, tag)
+    fun buildNotification(description: String): Notification =
+        NotificationCompat.Builder(this, tag)
             .setContentTitle("JetStream")
             .setContentText(description)
             .setSmallIcon(R.drawable.ic_notification_foreground)
             .build()
+
+    fun startDiscovery() {
+        discovery.start()
+    }
+
+    fun stopDiscovery() {
+        discovery.stop()
     }
 
     fun wsConnect(serverIP: String) {
@@ -111,8 +131,6 @@ class JetStreamService: Service(), WSCallback {
             Log.w(tag, "WebSocket already connected")
             return
         }
-
-        // Create WebSocket connection
         val request = Request.Builder().url("ws://$serverIP:$PORT/").build()
         webSocket = wsClient.newWebSocket(request, WSListener(this, applicationContext))
     }
@@ -122,8 +140,6 @@ class JetStreamService: Service(), WSCallback {
             Log.w(tag, "No WebSocket connection to close")
             return
         }
-
-        // Close WebSocket connection
         webSocket?.close(1000, "Client disconnected")
     }
 

@@ -97,7 +97,7 @@ class JetStreamNotificationListener : NotificationListenerService() {
         val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
         val iconBytes = sbn.notification.smallIcon
             ?.loadDrawable(this)
-            ?.toBitmap(width = 48, height = 48)
+            ?.toBitmap(width = 96, height = 96)
             ?.let { bitmap ->
                 ByteArrayOutputStream().use { stream ->
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)

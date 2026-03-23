@@ -157,6 +157,42 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
             Text("Connect to 192.168.1.10")
         }
 
+        OutlinedButton(
+            onClick = {
+                serverIP = "10.173.134.68"
+                fgService?.wsConnect(serverIP)
+            },
+        ) {
+            Text("Connect to 10.173.134.68")
+        }
+
+        Button(
+            onClick = {
+                fgService?.startDiscovery()
+            }
+        ) {
+            Text("Discover Servers")
+        }
+
+        // Discovered server list
+        val servers = fgService?.discoveredServers ?: emptyList()
+        if (servers.isEmpty()) {
+            Text("No servers found", style = MaterialTheme.typography.bodySmall)
+        } else {
+            servers.forEach { server ->
+                OutlinedButton(
+                    onClick = {
+                        serverIP = server.host
+                        fgService?.stopDiscovery()
+                        fgService?.wsConnect(server.host)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("${server.name}  •  ${server.host}:${server.port}")
+                }
+            }
+        }
+
         Surface(
             color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
             shape = RoundedCornerShape(8.dp)
