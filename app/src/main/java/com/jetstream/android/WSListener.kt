@@ -11,8 +11,13 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import java.io.IOException
+import com.jetstream.android.proto.Identification as JetStreamIdentification
 
-class WSListener(private val callback: WSCallback, private val context: Context): WebSocketListener() {
+class WSListener(
+    private val callback: WSCallback,
+    private val context: Context
+): WebSocketListener() {
     private val tag = "WSListener"
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -34,6 +39,18 @@ class WSListener(private val callback: WSCallback, private val context: Context)
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         super.onMessage(webSocket, bytes)
+        try {
+            val identification = JetStreamIdentification.ADAPTER.decode(bytes)
+            Log.d(tag, "Identified server: ${identification.name} at ${identification.host}:${identification.port}")
+            val server = ServerInfo(
+                name = identification.name,
+                host = identification.host,
+                port = identification.port
+            )
+            callback.setIdentity(server)
+        } catch (e: IOException) {
+            Log.e(tag, "Failed to decode identification message: ${e.message}")
+        }
         Log.d(tag, "WebSocket Message Received as Bytes")
     }
 

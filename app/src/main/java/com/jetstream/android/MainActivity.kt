@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -15,11 +16,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -111,8 +120,8 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
         )
 
         Text(
-            text = "Enter server address.",
-            style = MaterialTheme.typography.bodyMedium
+            text = "Enter server address or discover local server.",
+            style = MaterialTheme.typography.bodyLarge
         )
 
         OutlinedTextField (
@@ -148,50 +157,45 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
             }
         }
 
-        OutlinedButton(
-            onClick = {
-                serverIP = "192.168.1.10"
-                fgService?.wsConnect(serverIP)
-            },
-        ) {
-            Text("Connect to 192.168.1.10")
-        }
-
-        OutlinedButton(
-            onClick = {
-                serverIP = "10.173.134.68"
-                fgService?.wsConnect(serverIP)
-            },
-        ) {
-            Text("Connect to 10.173.134.68")
-        }
-
         Button(
             onClick = {
                 fgService?.startDiscovery()
             }
         ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.IconSize)
+            )
+            Spacer(Modifier.padding(2.dp))
             Text("Discover Servers")
         }
 
         // Discovered server list
         val servers = fgService?.discoveredServers ?: emptyList()
         if (servers.isEmpty()) {
-            Text("No servers found", style = MaterialTheme.typography.bodySmall)
+            Text("No servers found")
         } else {
             servers.forEach { server ->
-                OutlinedButton(
+                Card(
                     onClick = {
                         serverIP = server.host
                         fgService?.stopDiscovery()
                         fgService?.wsConnect(server.host)
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
                 ) {
-                    Text("${server.name}  •  ${server.host}:${server.port}")
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(server.name, style = MaterialTheme.typography.titleMedium)
+                        Text(server.host, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
+
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
         Surface(
             color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
@@ -203,6 +207,29 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (fgService?.isConnected == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError
             )
+        }
+
+        if (fgService?.serverInfo != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.secondary,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = """
+                            Name: ${fgService.serverInfo?.name}
+                            Host: ${fgService.serverInfo?.host}
+                            Port: ${fgService.serverInfo?.port}
+                        """.trimIndent(),
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     }
 }

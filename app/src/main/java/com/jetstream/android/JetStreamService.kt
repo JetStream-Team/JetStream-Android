@@ -17,7 +17,7 @@ import okio.ByteString
 
 const val PORT = 8000
 
-data class DiscoveredServer(
+data class ServerInfo(
     val name: String,
     val host: String,
     val port: Int
@@ -26,6 +26,7 @@ data class DiscoveredServer(
 interface WSCallback {
     fun onConnected()
     fun onDisconnected()
+    fun setIdentity(server: ServerInfo)
 }
 
 class JetStreamService : Service(), WSCallback {
@@ -38,24 +39,14 @@ class JetStreamService : Service(), WSCallback {
 
     private val wsClient = OkHttpClient()
     private var webSocket: WebSocket? = null
+    var isConnected by mutableStateOf(false) // Whether websocket is connected
 
-    var isConnected by mutableStateOf(false)
-
-    val discoveredServers = mutableStateListOf<DiscoveredServer>()
-
+    val discoveredServers = mutableStateListOf<ServerInfo>()
     private val discovery by lazy {
-        JetStreamDiscovery(
-            context = this,
-            onFound = { server ->
-                if (discoveredServers.none { it.name == server.name }) {
-                    discoveredServers.add(server)
-                }
-            },
-            onLost = { name ->
-                discoveredServers.removeAll { it.name == name }
-            }
-        )
+        JetStreamDiscovery(this, discoveredServers)
     }
+
+    var serverInfo: ServerInfo? = null
 
     override fun onConnected() {
         webSocket?.let { isConnected = true }
@@ -68,6 +59,10 @@ class JetStreamService : Service(), WSCallback {
         isConnected = false
         getSystemService(NotificationManager::class.java)
             .notify(1, buildNotification("Disconnected"))
+    }
+
+    override fun setIdentity(server: ServerInfo) {
+        serverInfo = server
     }
 
     override fun onCreate() {
@@ -111,12 +106,25 @@ class JetStreamService : Service(), WSCallback {
         Log.d(tag, "JetStreamService destroyed")
     }
 
-    fun buildNotification(description: String): Notification =
-        NotificationCompat.Builder(this, tag)
+    fun buildNotification(description: String): Notification {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, tag)
             .setContentTitle("JetStream")
             .setContentText(description)
+            .setSilent(true)
             .setSmallIcon(R.drawable.ic_notification_foreground)
+            .setContentIntent(pendingIntent)
             .build()
+    }
 
     fun startDiscovery() {
         discovery.start()

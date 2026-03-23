@@ -4,18 +4,27 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
+import androidx.compose.runtime.snapshots.SnapshotStateList
 
 private const val NSD_SERVICE_TYPE = "_jetstream._tcp"
 
 class JetStreamDiscovery(
     context: Context,
-    private val onFound: (DiscoveredServer) -> Unit,
-    private val onLost: (String) -> Unit
+    private val discoveredServers: SnapshotStateList<ServerInfo>
 ) {
     private val tag = "JetStreamDiscovery"
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var discoveryListener: NsdManager.DiscoveryListener? = null
 
+    private fun onFound(server: ServerInfo) {
+        if (discoveredServers.none { it.name == server.name }) {
+            discoveredServers.add(server)
+        }
+    }
+
+    private fun onLost(name: String) {
+        discoveredServers.removeAll { it.name == name }
+    }
     fun start() {
         if (discoveryListener != null) {
             Log.w(tag, "Discovery already running")
@@ -75,7 +84,7 @@ class JetStreamDiscovery(
                 Log.w(tag, "Resolved service has no host address")
                 return
             }
-            val server = DiscoveredServer(
+            val server = ServerInfo(
                 name = serviceInfo.serviceName,
                 host = host,
                 port = serviceInfo.port
