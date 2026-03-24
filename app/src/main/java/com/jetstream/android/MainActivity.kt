@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -13,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -30,7 +31,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -39,13 +39,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.jetstream.android.ui.theme.JetStreamTheme
+import kotlin.getValue
+import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
@@ -85,6 +86,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val viewModel: MainViewModel by viewModels()
+
         // Start the service at startup
         ContextCompat.startForegroundService(this, Intent(this, JetStreamService::class.java))
 
@@ -92,7 +95,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             JetStreamTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding), jetStreamService)
+                    MainScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        jetStreamService,
+                        viewModel
+                    )
                 }
             }
         }
@@ -100,8 +107,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = null) {
-    var serverIP by remember { mutableStateOf("") }
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    fgService: JetStreamService? = null,
+    viewModel: MainViewModel = MainViewModel()
+) {
+
+    val state = viewModel.uiState.collectAsState().value
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
@@ -111,7 +123,8 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(state.scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
@@ -125,8 +138,8 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
         )
 
         OutlinedTextField (
-            value = serverIP,
-            onValueChange = { serverIP = it },
+            value = state.serverIP,
+            onValueChange = { viewModel.setServerIP(it) },
             label = { Text("Server Address") },
             placeholder = { Text("eg: 192.168.1.10") },
             modifier = Modifier.fillMaxWidth()
@@ -138,10 +151,10 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
         ) {
             Button(
                 onClick = {
-                    fgService?.wsConnect(serverIP)
+                    fgService?.wsConnect(state.serverIP)
                 },
                 modifier = Modifier.weight(1f),
-                enabled = fgService?.isConnected == false && serverIP.isNotEmpty()
+                enabled = fgService?.isConnected == false && state.serverIP.isNotEmpty()
             ) {
                 Text("Connect")
             }
@@ -179,7 +192,7 @@ fun MainScreen(modifier: Modifier = Modifier, fgService: JetStreamService? = nul
             servers.forEach { server ->
                 Card(
                     onClick = {
-                        serverIP = server.host
+                        viewModel.setServerIP(server.host)
                         fgService?.stopDiscovery()
                         fgService?.wsConnect(server.host)
                     },
