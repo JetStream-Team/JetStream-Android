@@ -14,20 +14,27 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +54,14 @@ import androidx.core.content.ContextCompat
 import com.jetstream.android.ui.theme.JetStreamTheme
 import kotlin.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
+
+data class ActionItem(
+    val icon: ImageVector,
+    val label: String,
+    val onClick: () -> Unit = {}
+)
 
 class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
@@ -244,6 +259,70 @@ fun MainScreen(
                 }
             }
         }
+
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+        if (fgService?.isConnected == true) {
+            val actionHandler = ActionHandler(fgService)
+            val actionItems = listOf<ActionItem>(
+                ActionItem(Icons.Default.Lock, "Lock Desktop", {actionHandler.lockDesktop()}),
+                ActionItem(Icons.Default.PowerSettingsNew, "Poweroff Desktop", {actionHandler.poweroffDesktop()}),
+                ActionItem(Icons.Default.RestartAlt, "Restart Desktop", {actionHandler.rebootDesktop()})
+            )
+            val rows = actionItems.chunked(2)
+
+            rows.forEach { rowItems ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowItems.forEach { actionItem ->
+                        ActionCard(actionItem, modifier = Modifier.weight(1f))
+                        if (rowItems.size < 2) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionCard(actionItem: ActionItem, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .aspectRatio(1f),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        onClick = actionItem.onClick,
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(18.dp)
+                .fillMaxSize()
+        ) {
+            Icon(
+                imageVector = actionItem.icon,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
+            Text(
+                actionItem.label,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CardPreview() {
+    JetStreamTheme(darkTheme = true) {
+        ActionCard(
+            ActionItem(Icons.Default.Lock, "Lock Desktop", {})
+        )
     }
 }
 
