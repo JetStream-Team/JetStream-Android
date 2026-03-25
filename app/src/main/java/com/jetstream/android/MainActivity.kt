@@ -31,6 +31,10 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.ContentPasteGo
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -56,6 +60,7 @@ import kotlin.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 
 data class ActionItem(
     val icon: ImageVector,
@@ -263,11 +268,12 @@ fun MainScreen(
         HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
         if (fgService?.isConnected == true) {
-            val actionHandler = ActionHandler(fgService)
+            val actionHandler = ActionHandler(fgService, LocalContext.current)
             val actionItems = listOf<ActionItem>(
-                ActionItem(Icons.Default.Lock, "Lock Desktop", {actionHandler.lockDesktop()}),
-                ActionItem(Icons.Default.PowerSettingsNew, "Poweroff Desktop", {actionHandler.poweroffDesktop()}),
-                ActionItem(Icons.Default.RestartAlt, "Restart Desktop", {actionHandler.rebootDesktop()})
+                ActionItem(Icons.Rounded.Lock, "Lock Desktop", {actionHandler.lockDesktop()}),
+                ActionItem(Icons.Rounded.PowerSettingsNew, "Poweroff Desktop", {actionHandler.poweroffDesktop()}),
+                ActionItem(Icons.Rounded.RestartAlt, "Restart Desktop", {actionHandler.rebootDesktop()}),
+                ActionItem(Icons.Rounded.ContentPasteGo, "Send Clipboard", {actionHandler.sendClipboard()})
             )
             val rows = actionItems.chunked(2)
 
