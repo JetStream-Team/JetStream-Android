@@ -12,6 +12,12 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.graphics.drawable.toBitmap
 import com.jetstream.android.proto.MessageWrapper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import java.io.ByteArrayOutputStream
@@ -20,7 +26,6 @@ import com.jetstream.android.proto.Notification as JetStreamNotification
 class JetStreamNotificationListener : NotificationListenerService() {
     private val tag = "JetStreamNotificationListener"
 
-    // Companion objects are static i.e. shared across instances
     companion object {
         private val EXCLUDE_PACKAGES = setOf(
             "",
@@ -30,6 +35,9 @@ class JetStreamNotificationListener : NotificationListenerService() {
 
     private var jetStreamService: JetStreamService? = null
     private var isBound = false
+
+    // Coroutine scope tied to the listener's lifecycle
+    private val listenerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -58,85 +66,91 @@ class JetStreamNotificationListener : NotificationListenerService() {
         if (isBound) {
             unbindService(serviceConnection)
             isBound = false
-            Log.d(tag, "Listener disconnected")
         }
+        listenerScope.cancel()
+        Log.d(tag, "Listener disconnected")
     }
 
     private fun filterNotification(sbn: StatusBarNotification): Boolean {
-
-        // Filter out if the service is not running or connected
         val service = jetStreamService ?: return true
         if (!service.isConnected) return true
-
-        // Skip notifications posted by JetStream itself to avoid loops
         if (sbn.packageName == packageName) return true
-
-        // Skip spammy applications
         if (sbn.packageName in EXCLUDE_PACKAGES) return true
 
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
-
-        // Skip notifications without any content or title
         if (title.isEmpty() && body.isEmpty()) return true
 
         return false
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        // Filter out certain notifications
         if (filterNotification(sbn)) return
 
-        Log.d(tag, "Notification posted: ${sbn.packageName}")
+        listenerScope.launch {
+            // Check the setting before forwarding
+            val settingsRepo = SettingsRepository(applicationContext)
+            val allowed = settingsRepo.settingsFlow.first().allowNotifications
+            if (!allowed) {
+                Log.d(tag, "Notification sending disabled — skipping")
+                return@launch
+            }
 
-        val service = jetStreamService ?: return
+            val service = jetStreamService ?: return@launch
+            Log.d(tag, "Notification posted: ${sbn.packageName}")
 
-        val extras = sbn.notification.extras
-        val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
-        val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
-        val iconBytes = sbn.notification.smallIcon
-            ?.loadDrawable(this)
-            ?.toBitmap(width = 96, height = 96)
-            ?.let { bitmap ->
-                ByteArrayOutputStream().use { stream ->
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                    stream.toByteArray().toByteString()
-                }
-            } ?: ByteString.EMPTY
+            val extras = sbn.notification.extras
+            val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
+            val body  = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+            val iconBytes = sbn.notification.smallIcon
+                ?.loadDrawable(this@JetStreamNotificationListener)
+                ?.toBitmap(width = 48, height = 48)
+                ?.let { bitmap ->
+                    ByteArrayOutputStream().use { stream ->
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        stream.toByteArray().toByteString()
+                    }
+                } ?: ByteString.EMPTY
 
-        val wrapper = MessageWrapper(
-            notification = JetStreamNotification(
-                create = true,
-                id = sbn.id,
-                title = title,
-                body = body,
-                icon = iconBytes
+            val wrapper = MessageWrapper(
+                notification = JetStreamNotification(
+                    create = true,
+                    id = sbn.id,
+                    title = title,
+                    body = body,
+                    icon = iconBytes
+                )
             )
-        )
-        val bytes = MessageWrapper.ADAPTER.encode(wrapper)
-        val sent = service.sendMessage(bytes)
-        Log.d(tag, "Notification forwarded: ${sbn.packageName}, sent=$sent")
+            service.sendMessage(MessageWrapper.ADAPTER.encode(wrapper))
+            Log.d(tag, "Notification forwarded: ${sbn.packageName}")
+        }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        Log.d(tag, "Notification removed: ${sbn.packageName}")
-
-        // Filter out certain notifications
         if (filterNotification(sbn)) return
 
-        val service = jetStreamService ?: return
+        listenerScope.launch {
+            val settingsRepo = SettingsRepository(applicationContext)
+            val allowed = settingsRepo.settingsFlow.first().allowNotifications
+            if (!allowed) {
+                Log.d(tag, "Notification sending disabled — skipping removal")
+                return@launch
+            }
 
-        val wrapper = MessageWrapper(
-            notification = JetStreamNotification(
-                create = false,
-                id = sbn.id,
-                title = "",
-                body = ""
+            val service = jetStreamService ?: return@launch
+            Log.d(tag, "Notification removed: ${sbn.packageName}")
+
+            val wrapper = MessageWrapper(
+                notification = JetStreamNotification(
+                    create = false,
+                    id = sbn.id,
+                    title = "",
+                    body = ""
+                )
             )
-        )
-        val bytes = MessageWrapper.ADAPTER.encode(wrapper)
-        val sent = service.sendMessage(bytes)
-        Log.d(tag, "Notification removal forwarded: ${sbn.packageName}, sent=$sent")
+            service.sendMessage(MessageWrapper.ADAPTER.encode(wrapper))
+            Log.d(tag, "Notification removal forwarded: ${sbn.packageName}")
+        }
     }
 }

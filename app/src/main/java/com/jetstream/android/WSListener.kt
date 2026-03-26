@@ -5,22 +5,13 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import java.io.IOException
-import com.jetstream.android.proto.Identity as JetStreamIdentity
 
-class WSListener(
-    private val callback: WSCallback,
-    private val context: Context
-): WebSocketListener() {
+class WSListener(private val callback: WSCallback, private val context: Context) : WebSocketListener() {
     private val tag = "WSListener"
-
-    private var waitingForIdentity = true
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
@@ -41,25 +32,15 @@ class WSListener(
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         super.onMessage(webSocket, bytes)
-        if (waitingForIdentity) {
-            val identification = JetStreamIdentity.ADAPTER.decode(bytes)
-            Log.d(tag, "Identified server: ${identification.name} at ${identification.host}:${identification.port}")
-            val server = ServerInfo(
-                name = identification.name,
-                host = identification.host,
-                port = identification.port
-            )
-            waitingForIdentity = false
-            callback.setIdentity(server)
-            return
-        }
-
         Log.d(tag, "WebSocket Message Received as Bytes")
+        // If the desktop sends clipboard content as raw bytes, handle it here
+        callback.onClipboardReceived(bytes.utf8())
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         Log.d(tag, "WebSocket Message Received as Text: $text")
+        callback.onClipboardReceived(text)
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

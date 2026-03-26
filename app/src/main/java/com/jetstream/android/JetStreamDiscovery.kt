@@ -26,7 +26,8 @@ class JetStreamDiscovery(
     }
 
     private fun onLost(name: String) {
-        discoveredServers.removeAll { it.name == name }
+        // removeIf is the correct way to filter out items by a property
+        discoveredServers.removeIf { it.name == name }
     }
     fun start() {
         if (discoveryListener != null) {
