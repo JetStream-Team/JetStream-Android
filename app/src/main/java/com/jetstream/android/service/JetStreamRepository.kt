@@ -5,9 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class ServerInfo(
-    val serverIp: String = "",
+    val name: String = "",
+    val host: String = "",
     val port: Int = 8000,
-    val deviceName: String = ""
 )
 
 object JetStreamRepository {

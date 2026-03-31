@@ -3,14 +3,18 @@ package com.jetstream.android.screens.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -94,6 +98,43 @@ fun HomeScreen(navController: NavController) {
                 enabled = uiState.connected
             ) {
                 Text("Disconnect")
+            }
+        }
+
+        Button(
+            onClick = {
+                viewModel.startDiscovery()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.IconSize)
+            )
+            Spacer(Modifier.padding(2.dp))
+            Text("Discover Servers")
+        }
+
+        // Discovered server list
+        if (uiState.discoveredServers.isEmpty()) {
+            Text("No servers found")
+        } else {
+            uiState.discoveredServers.forEach { server ->
+                Card(
+                    onClick = {
+                        viewModel.setServerIP(server.host)
+                        viewModel.stopDiscovery()
+                        viewModel.connect()
+                    },
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(server.name, style = MaterialTheme.typography.titleMedium)
+                        Text(server.host, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
         }
 

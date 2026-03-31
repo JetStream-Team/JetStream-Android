@@ -8,7 +8,6 @@ private const val NSD_SERVICE_TYPE = "_jetstream._tcp"
 
 class JetStreamDiscovery(
     context: Context,
-    val repository: DiscoveryRepository = DiscoveryRepository()
 ) {
     private val tag = "JetStreamDiscovery"
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
@@ -22,17 +21,23 @@ class JetStreamDiscovery(
 
         val listener = DiscoveryListener(
             nsdManager = nsdManager,
-            onFound = repository::add,
-            onLost = repository::remove,
+            onFound = DiscoveryRepository::addServer,
+            onLost = DiscoveryRepository::removeServer,
         )
 
+        Log.d(tag, "Starting discovery")
         nsdManager.discoverServices(NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, listener)
         activeListener = listener
     }
 
     fun stop() {
-        val listener = activeListener ?: return
+        val listener = activeListener ?: run {
+            Log.w(tag, "Discovery not running")
+            return
+        }
+
         try {
+            Log.d(tag, "Stopping discovery")
             nsdManager.stopServiceDiscovery(listener)
         } catch (e: IllegalArgumentException) {
             Log.w(tag, "Discovery listener was not registered: ${e.message}")
