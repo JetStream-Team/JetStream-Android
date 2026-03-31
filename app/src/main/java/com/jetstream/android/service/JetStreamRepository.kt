@@ -4,53 +4,72 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class ConnectionDetails(
+data class ServerInfo(
     val serverIp: String = "",
     val port: Int = 8000,
     val deviceName: String = ""
 )
 
 object JetStreamRepository {
-
     private const val TAG = "JetStreamRepository"
 
     private val _connected = MutableStateFlow(false)
     val connected = _connected.asStateFlow()
 
-    private val _connectionDetails = MutableStateFlow(ConnectionDetails())
-    val connectionDetails = _connectionDetails.asStateFlow()
+    private val _serverInfo = MutableStateFlow(ServerInfo())
+    val serverInfo = _serverInfo.asStateFlow()
 
     private var service: JetStreamService? = null
 
-    fun onServiceConnected(jetStreamService: JetStreamService) {
+    fun onServiceCreated(jetStreamService: JetStreamService) {
         service = jetStreamService
         Log.d(TAG, "Service reference acquired")
     }
 
-    fun onServiceDisconnected() {
+    fun onServiceDestroyed() {
         _connected.value = false
-        _connectionDetails.value = ConnectionDetails()
+        _serverInfo.value = ServerInfo()
         service = null
         Log.d(TAG, "Service reference cleared")
     }
 
-    fun wsConnect(serverIp: String) {
-        Log.d(TAG, "wsConnect called with $serverIp")
-        // TODO: real WebSocket connection here
+    fun onWebSocketConnected(serverIp: String, port: Int) {
         _connected.value = true
-        _connectionDetails.value = ConnectionDetails(serverIp = serverIp, port = 8000)
-        service?.updateNotification("Connected to $serverIp")
+    }
+
+    fun onWebSocketDisconnected() {
+        _connected.value = false
+        _serverInfo.value = ServerInfo()
+    }
+
+    fun setServerInfo(serverInfo: ServerInfo) {
+        _serverInfo.value = serverInfo
+    }
+
+    fun wsConnect(serverIp: String, port: Int = 8000) {
+        val service = service ?: run {
+            Log.w(TAG, "wsConnect called but service is null")
+            return
+        }
+
+        service.connect(serverIp, port)
     }
 
     fun wsDisconnect() {
-        Log.d(TAG, "wsDisconnect called")
-        // TODO: real WebSocket disconnect here
-        _connected.value = false
-        _connectionDetails.value = ConnectionDetails()
-        service?.updateNotification("Disconnected")
+        val service = service ?: run {
+            Log.w(TAG, "wsDisconnect called but service is null")
+            return
+        }
+
+        service.disconnect()
     }
 
-    fun updateConnectionDetails(details: ConnectionDetails) {
-        _connectionDetails.value = details
+    fun wsSend(message: String) {
+        val service = service ?: run {
+            Log.w(TAG, "send called but service is null")
+            return
+        }
+
+        service.send(message.toByteArray())
     }
 }

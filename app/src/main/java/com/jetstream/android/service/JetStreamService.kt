@@ -12,50 +12,123 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.jetstream.android.MainActivity
 import com.jetstream.android.R
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import okio.ByteString.Companion.toByteString
 
 class JetStreamService : Service() {
+    private val TAG = "JetStreamService"
+    private val CHANNEL_ID = "jetstream_service"
 
-    companion object {
-        private const val TAG = "JetStreamService"
-        private const val CHANNEL_ID = "jetstream_service"
-        const val NOTIFICATION_ID = 1
-    }
+    private var isRunning = false
 
-    private lateinit var notificationManager: NotificationManager
+    private val client = OkHttpClient()
+    private var webSocket: WebSocket? = null
 
     override fun onCreate() {
         super.onCreate()
-        notificationManager = getSystemService(NotificationManager::class.java)
-        createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildNotification("Disconnected"), FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        JetStreamRepository.onServiceConnected(this)
+
+        // Create notification channel
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "JetStream Service",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        notificationManager.createNotificationChannel(channel)
+
+        // Pass itself to JetStreamRepository
+        JetStreamRepository.onServiceCreated(this)
+
+        Log.d(TAG, "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Do nothing if already running
+        if (isRunning) {
+            Log.w(TAG, "Already running, ignoring onStartCommand()")
+            return START_STICKY
+        }
+
+        // If not already running, start the foreground service
+        isRunning = true
+        startForeground(1, buildNotification("Disconnected"), FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+
         Log.d(TAG, "Service started")
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Disconnect from websocket
+        disconnect()
+
+        // Destroy client
+        client.dispatcher.executorService.shutdown()
+
+        // Clear JetStreamRepository
+        JetStreamRepository.onServiceDestroyed()
+
         Log.d(TAG, "Service destroyed")
-        JetStreamRepository.onServiceDisconnected()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    fun updateNotification(text: String) {
-        notificationManager.notify(NOTIFICATION_ID, buildNotification(text))
+    fun connect(serverIp: String, port: Int = 8000) {
+        // Do nothing if already connected
+        if (webSocket != null) {
+            Log.w(TAG, "Already connected, ignoring connect()")
+            return
+        }
+
+        // Build websocket request
+        val url = "ws://$serverIp:$port"
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        // Try to connect
+        Log.d(TAG, "Connecting to $url")
+        webSocket = client.newWebSocket(
+            request,
+            WSListener(serverIp, port, ::updateNotification, ::clearWebSocket)
+        )
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "JetStream",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        notificationManager.createNotificationChannel(channel)
+    fun disconnect() {
+        // Do nothing if not connected
+        val ws = webSocket ?: run {
+            Log.w(TAG, "Not connected, ignoring disconnect()")
+            return
+        }
+
+        // Try to disconnect
+        Log.d(TAG, "Disconnecting")
+        ws.close(1000, "User disconnected")
+        webSocket = null
     }
+
+    fun clearWebSocket() {
+        webSocket = null
+    }
+
+    fun updateNotification(text: String) {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(1, buildNotification(text))
+    }
+
+    fun send(bytes: ByteArray) {
+        val ws = webSocket ?: run {
+            Log.w(TAG, "Not connected, ignoring send()")
+            return
+        }
+
+        Log.d(TAG, "Sending bytes: ${bytes.size}")
+        ws.send(bytes.toByteString(0, bytes.size))
+    }
+
 
     private fun buildNotification(statusText: String): Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
