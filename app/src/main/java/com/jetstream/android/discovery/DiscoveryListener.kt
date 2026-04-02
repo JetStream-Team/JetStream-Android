@@ -14,18 +14,22 @@ class DiscoveryListener(
     private val tag = "DiscoveryListener"
 
     override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+        DiscoveryRepository.setDiscovering(false)
         Log.e(tag, "Discovery start failed: error $errorCode")
     }
 
     override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
+        DiscoveryRepository.setDiscovering(false)
         Log.e(tag, "Discovery stop failed: error $errorCode")
     }
 
     override fun onDiscoveryStarted(serviceType: String) {
+        DiscoveryRepository.setDiscovering(true)
         Log.d(tag, "Discovery started for $serviceType")
     }
 
     override fun onDiscoveryStopped(serviceType: String) {
+        DiscoveryRepository.setDiscovering(false)
         Log.d(tag, "Discovery stopped for $serviceType")
     }
 

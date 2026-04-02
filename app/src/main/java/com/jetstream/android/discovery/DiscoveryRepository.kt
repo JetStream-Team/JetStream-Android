@@ -10,6 +10,9 @@ object DiscoveryRepository {
     private val _discoveredServers = MutableStateFlow<List<ServerInfo>>(emptyList())
     val discoveredServers = _discoveredServers.asStateFlow()
 
+    private val _isDiscovering = MutableStateFlow(false)
+    val isDiscovering = _isDiscovering.asStateFlow()
+
     fun addServer(server: ServerInfo) {
         _discoveredServers.value += server
         Log.d(TAG, "New server added to discovered servers")
@@ -20,8 +23,12 @@ object DiscoveryRepository {
         Log.d(TAG, "Server removed from discovered servers")
     }
 
-    fun clear() {
+    fun clearServers() {
         _discoveredServers.value = emptyList()
         Log.d(TAG, "Discovered servers list cleared")
+    }
+
+    fun setDiscovering(isDiscovering: Boolean) {
+        _isDiscovering.value = isDiscovering
     }
 }

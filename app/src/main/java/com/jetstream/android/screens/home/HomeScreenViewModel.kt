@@ -17,7 +17,9 @@ data class HomeScreenState(
     val serverIP: String = "",
     val connected: Boolean = false,
     val serverInfo: ServerInfo = ServerInfo(),
-    val discoveredServers: List<ServerInfo> = emptyList()
+    val isDiscovering: Boolean = false,
+    val discoveredServers: List<ServerInfo> = emptyList(),
+    val connectionSheetVisible: Boolean = false
 )
 
 class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
@@ -38,6 +40,11 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
+            DiscoveryRepository.isDiscovering.collect { isDiscovering ->
+                _uiState.update { it.copy(isDiscovering = isDiscovering) }
+            }
+        }
+        viewModelScope.launch {
             DiscoveryRepository.discoveredServers.collect { servers ->
                 _uiState.update { it.copy(discoveredServers = servers) }
             }
@@ -55,4 +62,12 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
     fun startDiscovery() = jetStreamDiscovery.startDiscovery()
 
     fun stopDiscovery() = jetStreamDiscovery.stopDiscovery()
+
+    fun showConnectionSheet() {
+        _uiState.update { it.copy(connectionSheetVisible = true) }
+    }
+
+    fun hideConnectionSheet() {
+        _uiState.update { it.copy(connectionSheetVisible = false) }
+    }
 }

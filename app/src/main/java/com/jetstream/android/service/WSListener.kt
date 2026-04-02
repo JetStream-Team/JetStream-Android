@@ -19,6 +19,7 @@ class WSListener(
     override fun onOpen(webSocket: WebSocket, response: Response) {
         Log.d(TAG, "WebSocket opened")
         JetStreamRepository.onWebSocketConnected(serverIp, port)
+        JetStreamRepository.setServerInfo(ServerInfo("", serverIp))
         updateNotification("Connected to $serverIp")
     }
 
