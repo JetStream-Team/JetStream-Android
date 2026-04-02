@@ -2,7 +2,6 @@ package com.jetstream.android.screens.home
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetstream.android.discovery.DiscoveryRepository
 import com.jetstream.android.discovery.JetStreamDiscovery
@@ -25,7 +24,7 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
     private val _uiState = MutableStateFlow(HomeScreenState())
     val uiState = _uiState.asStateFlow()
 
-    private val discovery = JetStreamDiscovery(app)
+    private val jetStreamDiscovery = JetStreamDiscovery(app)
 
     init {
         viewModelScope.launch {
@@ -39,7 +38,7 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
-            DiscoveryRepository.servers.collect { servers ->
+            DiscoveryRepository.discoveredServers.collect { servers ->
                 _uiState.update { it.copy(discoveredServers = servers) }
             }
         }
@@ -49,15 +48,11 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
         _uiState.update { it.copy(serverIP = newIP) }
     }
 
-    fun connect() {
-        JetStreamRepository.wsConnect(_uiState.value.serverIP)
-    }
+    fun connect() = JetStreamRepository.wsConnect(_uiState.value.serverIP)
 
-    fun disconnect() {
-        JetStreamRepository.wsDisconnect()
-    }
+    fun disconnect() = JetStreamRepository.wsDisconnect()
 
-    fun startDiscovery() = discovery.start()
+    fun startDiscovery() = jetStreamDiscovery.startDiscovery()
 
-    fun stopDiscovery() = discovery.stop()
+    fun stopDiscovery() = jetStreamDiscovery.stopDiscovery()
 }

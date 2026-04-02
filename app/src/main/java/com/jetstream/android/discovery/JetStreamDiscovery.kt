@@ -13,7 +13,7 @@ class JetStreamDiscovery(
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var activeListener: DiscoveryListener? = null
 
-    fun start() {
+    fun startDiscovery() {
         if (activeListener != null) {
             Log.w(tag, "Discovery already running")
             return
@@ -30,7 +30,7 @@ class JetStreamDiscovery(
         activeListener = listener
     }
 
-    fun stop() {
+    fun stopDiscovery() {
         val listener = activeListener ?: run {
             Log.w(tag, "Discovery not running")
             return

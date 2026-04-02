@@ -40,6 +40,28 @@ fun HomeScreen(navController: NavController) {
     val viewModel: HomeScreenViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    HomeScreenContent(
+        uiState,
+        gotoSettings = { navController.navigate(Routes.SETTINGS) },
+        onServerIPChange = { viewModel.setServerIP(it) },
+        onConnect = { viewModel.connect() },
+        onDisconnect = { viewModel.disconnect() },
+        onDiscoverStart = { viewModel.startDiscovery() },
+        onDiscoverStop = { viewModel.stopDiscovery() }
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    uiState: HomeScreenState,
+    gotoSettings: () -> Unit,
+    onServerIPChange: (String) -> Unit,
+    onConnect: () -> Unit,
+    onDisconnect: () -> Unit,
+    onDiscoverStart: () -> Unit,
+    onDiscoverStop: () -> Unit,
+) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,7 +79,7 @@ fun HomeScreen(navController: NavController) {
             )
 
             IconButton(
-                onClick = { navController.navigate(Routes.SETTINGS) }
+                onClick = gotoSettings
             ) {
                 Icon(
                     modifier = Modifier.size(32.dp),
@@ -74,7 +96,7 @@ fun HomeScreen(navController: NavController) {
 
         OutlinedTextField (
             value = uiState.serverIP,
-            onValueChange = { viewModel.setServerIP(it) },
+            onValueChange = onServerIPChange,
             label = { Text("Server Address") },
             placeholder = { Text("eg: 192.168.1.10") },
             modifier = Modifier.fillMaxWidth()
@@ -85,7 +107,7 @@ fun HomeScreen(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { viewModel.connect() },
+                onClick = onConnect,
                 modifier = Modifier.weight(1f),
                 enabled = !uiState.connected && uiState.serverIP.isNotEmpty()
             ) {
@@ -93,7 +115,7 @@ fun HomeScreen(navController: NavController) {
             }
 
             Button(
-                onClick = { viewModel.disconnect() },
+                onClick = onDisconnect,
                 modifier = Modifier.weight(1f),
                 enabled = uiState.connected
             ) {
@@ -102,9 +124,7 @@ fun HomeScreen(navController: NavController) {
         }
 
         Button(
-            onClick = {
-                viewModel.startDiscovery()
-            }
+            onClick = onDiscoverStart
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
@@ -122,9 +142,9 @@ fun HomeScreen(navController: NavController) {
             uiState.discoveredServers.forEach { server ->
                 Card(
                     onClick = {
-                        viewModel.setServerIP(server.host)
-                        viewModel.stopDiscovery()
-                        viewModel.connect()
+                        onServerIPChange(server.host)
+                        onDiscoverStop()
+                        onConnect()
                     },
                     modifier = Modifier
                         .padding(8.dp)
@@ -159,7 +179,15 @@ fun HomeScreen(navController: NavController) {
 fun HomeScreenPreview() {
     JetStreamTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            HomeScreen(rememberNavController())
+            HomeScreenContent(
+                HomeScreenState(),
+                gotoSettings = { },
+                onServerIPChange = { },
+                onConnect = { },
+                onDisconnect = { },
+                onDiscoverStart = { },
+                onDiscoverStop = { }
+            )
         }
     }
 }

@@ -52,7 +52,7 @@ object JetStreamRepository {
             return
         }
 
-        service.connect(serverIp, port)
+        service.wsConnect(serverIp, port)
     }
 
     fun wsDisconnect() {
@@ -61,7 +61,7 @@ object JetStreamRepository {
             return
         }
 
-        service.disconnect()
+        service.wsDisconnect()
     }
 
     fun wsSend(message: String) {

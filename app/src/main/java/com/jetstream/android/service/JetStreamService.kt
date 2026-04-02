@@ -63,7 +63,7 @@ class JetStreamService : Service() {
         super.onDestroy()
 
         // Disconnect from websocket
-        disconnect()
+        wsDisconnect()
 
         // Destroy client
         client.dispatcher.executorService.shutdown()
@@ -76,7 +76,7 @@ class JetStreamService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    fun connect(serverIp: String, port: Int = 8000) {
+    fun wsConnect(serverIp: String, port: Int = 8000) {
         // Do nothing if already connected
         if (webSocket != null) {
             Log.w(TAG, "Already connected, ignoring connect()")
@@ -97,7 +97,7 @@ class JetStreamService : Service() {
         )
     }
 
-    fun disconnect() {
+    fun wsDisconnect() {
         // Do nothing if not connected
         val ws = webSocket ?: run {
             Log.w(TAG, "Not connected, ignoring disconnect()")
