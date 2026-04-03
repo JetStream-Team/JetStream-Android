@@ -44,6 +44,7 @@ object JetStreamRepository {
 
     fun setServerInfo(serverInfo: ServerInfo) {
         _serverInfo.value = serverInfo
+        Log.d(TAG, "Server info updated")
     }
 
     fun wsConnect(serverIp: String, port: Int = 8000) {

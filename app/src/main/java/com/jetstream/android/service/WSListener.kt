@@ -29,6 +29,7 @@ class WSListener(
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         Log.d(TAG, "Binary message received: ${bytes.size} bytes")
+        ProtoMessageHandler(bytes)
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
