@@ -1,5 +1,6 @@
 package com.jetstream.android.screens.home
 
+import android.app.Dialog
 import android.graphics.drawable.Icon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -144,50 +146,11 @@ fun HomeScreenContent(
 
         Spacer(Modifier.height(8.dp))
 
-        val actionTiles = listOf(
-            ActionTile("Lock", Icons.Rounded.Lock, sendLockMessage),
-            ActionTile("Poweroff", Icons.Rounded.PowerSettingsNew, sendPowerOffMessage),
-            ActionTile("Reboot", Icons.Rounded.RestartAlt, sendRebootMessage),
-            )
-        val actionTilesChunked = actionTiles.chunked(2)
-        actionTilesChunked.forEach { actionTilesRow ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                actionTilesRow.forEach { actionTile ->
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ),
-                        onClick = actionTile.onClick,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .padding(18.dp)
-                                .fillMaxSize()
-                        ) {
-                            Icon(
-                                imageVector = actionTile.icon,
-                                contentDescription = null,
-                                modifier = Modifier.align(Alignment.TopStart)
-                            )
-                            Text(
-                                actionTile.label,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                        }
-                    }
-
-                    if (actionTilesRow.count() < 2) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
+        ActionTileGrid(
+            sendLockMessage,
+            sendPowerOffMessage,
+            sendRebootMessage
+        )
 
     }
 }
@@ -361,6 +324,59 @@ fun ConnectionSheet(
         }
     }
 
+}
+
+@Composable
+fun ActionTileGrid(
+    sendLockMessage: () -> Unit,
+    sendPowerOffMessage: () -> Unit,
+    sendRebootMessage: () -> Unit
+) {
+    val actionTiles = listOf(
+        ActionTile("Lock", Icons.Rounded.Lock, sendLockMessage),
+        ActionTile("Poweroff", Icons.Rounded.PowerSettingsNew, sendPowerOffMessage),
+        ActionTile("Reboot", Icons.Rounded.RestartAlt, sendRebootMessage),
+        ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, {})
+    )
+    val actionTilesChunked = actionTiles.chunked(2)
+    actionTilesChunked.forEach { actionTilesRow ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            actionTilesRow.forEach { actionTile ->
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    onClick = actionTile.onClick,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(18.dp)
+                            .fillMaxSize()
+                    ) {
+                        Icon(
+                            imageVector = actionTile.icon,
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.TopStart)
+                        )
+                        Text(
+                            actionTile.label,
+                            modifier = Modifier.align(Alignment.BottomStart)
+                        )
+                    }
+                }
+
+                if (actionTilesRow.count() < 2) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
