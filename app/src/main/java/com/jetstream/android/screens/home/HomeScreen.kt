@@ -1,5 +1,6 @@
 package com.jetstream.android.screens.home
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.scrollable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,11 +19,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -38,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +54,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jetstream.android.Routes
 import com.jetstream.android.ui.theme.JetStreamTheme
+
+data class ActionTile(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)
 
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -60,7 +75,10 @@ fun HomeScreen(navController: NavController) {
         onConnect = { viewModel.connect() },
         onDisconnect = { viewModel.disconnect() },
         onDiscoverStart = { viewModel.startDiscovery() },
-        onDiscoverStop = { viewModel.stopDiscovery() }
+        onDiscoverStop = { viewModel.stopDiscovery() },
+        sendLockMessage = { viewModel.sendLockMessage() },
+        sendPowerOffMessage = { viewModel.sendPowerOffMessage() },
+        sendRebootMessage = { viewModel.sendRebootMessage() }
     )
 }
 
@@ -75,13 +93,16 @@ fun HomeScreenContent(
     onDisconnect: () -> Unit,
     onDiscoverStart: () -> Unit,
     onDiscoverStop: () -> Unit,
+    sendLockMessage: () -> Unit,
+    sendPowerOffMessage: () -> Unit,
+    sendRebootMessage: () -> Unit
 ) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -119,6 +140,53 @@ fun HomeScreenContent(
                 onDiscoverStart,
                 onDiscoverStop
             )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        val actionTiles = listOf(
+            ActionTile("Lock", Icons.Rounded.Lock, sendLockMessage),
+            ActionTile("Poweroff", Icons.Rounded.PowerSettingsNew, sendPowerOffMessage),
+            ActionTile("Reboot", Icons.Rounded.RestartAlt, sendRebootMessage),
+            )
+        val actionTilesChunked = actionTiles.chunked(2)
+        actionTilesChunked.forEach { actionTilesRow ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                actionTilesRow.forEach { actionTile ->
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        onClick = actionTile.onClick,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(18.dp)
+                                .fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = actionTile.icon,
+                                contentDescription = null,
+                                modifier = Modifier.align(Alignment.TopStart)
+                            )
+                            Text(
+                                actionTile.label,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                        }
+                    }
+
+                    if (actionTilesRow.count() < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
         }
 
     }
@@ -309,7 +377,10 @@ fun HomeScreenPreview() {
                 onConnect = { },
                 onDisconnect = { },
                 onDiscoverStart = { },
-                onDiscoverStop = { }
+                onDiscoverStop = { },
+                sendLockMessage = { },
+                sendPowerOffMessage = { },
+                sendRebootMessage = { }
             )
         }
     }

@@ -65,12 +65,12 @@ object JetStreamRepository {
         service.wsDisconnect()
     }
 
-    fun wsSend(message: String) {
+    fun wsSend(bytes: ByteArray) {
         val service = service ?: run {
             Log.w(TAG, "send called but service is null")
             return
         }
 
-        service.send(message.toByteArray())
+        service.send(bytes)
     }
 }

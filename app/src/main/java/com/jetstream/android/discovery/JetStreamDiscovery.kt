@@ -25,6 +25,9 @@ class JetStreamDiscovery(
             onLost = DiscoveryRepository::removeServer,
         )
 
+        // Clear previously discovered servers
+        DiscoveryRepository.clearServers()
+
         Log.d(tag, "Starting discovery")
         nsdManager.discoverServices(NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, listener)
         activeListener = listener

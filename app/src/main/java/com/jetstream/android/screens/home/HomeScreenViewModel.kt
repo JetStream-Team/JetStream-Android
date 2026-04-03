@@ -5,6 +5,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetstream.android.discovery.DiscoveryRepository
 import com.jetstream.android.discovery.JetStreamDiscovery
+import com.jetstream.android.proto.Action
+import com.jetstream.android.proto.Lock
+import com.jetstream.android.proto.MessageWrapper
+import com.jetstream.android.proto.Poweroff
+import com.jetstream.android.proto.Reboot
 import com.jetstream.android.service.JetStreamRepository
 import com.jetstream.android.service.ServerInfo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,5 +74,26 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
 
     fun hideConnectionSheet() {
         _uiState.update { it.copy(connectionSheetVisible = false) }
+    }
+
+    fun sendLockMessage() {
+        val wrapper = MessageWrapper(
+            action = Action(lock = Lock())
+        )
+        JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+    }
+
+    fun sendPowerOffMessage() {
+        val wrapper = MessageWrapper(
+            action = Action(poweroff = Poweroff())
+        )
+        JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+    }
+
+    fun sendRebootMessage() {
+        val wrapper = MessageWrapper(
+            action = Action(reboot = Reboot())
+        )
+        JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
     }
 }

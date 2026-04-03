@@ -1,12 +1,11 @@
 package com.jetstream.android.service
 
 import android.util.Log
-import com.jetstream.android.proto.Identity
 import com.jetstream.android.proto.MessageWrapper
 import okio.ByteString
 
 const val TAG = "ProtoMessageHandler"
-fun ProtoMessageHandler(bytes: ByteString) {
+fun protoMessageHandler(bytes: ByteString) {
     val wrapper = MessageWrapper.ADAPTER.decode(bytes)
 
     // Identity Message
