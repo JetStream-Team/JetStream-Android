@@ -1,6 +1,7 @@
 package com.jetstream.android.screens.home
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetstream.android.discovery.DiscoveryRepository
@@ -24,10 +25,12 @@ data class HomeScreenState(
     val serverInfo: ServerInfo = ServerInfo(),
     val isDiscovering: Boolean = false,
     val discoveredServers: List<ServerInfo> = emptyList(),
-    val connectionSheetVisible: Boolean = false
+    val connectionSheetVisible: Boolean = false,
+    val powerMenuVisible: Boolean = false
 )
 
 class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
+    private val TAG = "HomeScreenViewModel"
     private val _uiState = MutableStateFlow(HomeScreenState())
     val uiState = _uiState.asStateFlow()
 
@@ -76,11 +79,20 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
         _uiState.update { it.copy(connectionSheetVisible = false) }
     }
 
+    fun showPowerMenu() {
+        _uiState.update { it.copy(powerMenuVisible = true) }
+    }
+
+    fun hidePowerMenu() {
+        _uiState.update { it.copy(powerMenuVisible = false) }
+    }
+
     fun sendLockMessage() {
         val wrapper = MessageWrapper(
             action = Action(lock = Lock())
         )
         JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+        Log.d(TAG, "Lock message sent")
     }
 
     fun sendPowerOffMessage() {
@@ -88,6 +100,7 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
             action = Action(poweroff = Poweroff())
         )
         JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+        Log.d(TAG, "Poweroff message sent")
     }
 
     fun sendRebootMessage() {
@@ -95,5 +108,6 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
             action = Action(reboot = Reboot())
         )
         JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+        Log.d(TAG, "Reboot message sent")
     }
 }

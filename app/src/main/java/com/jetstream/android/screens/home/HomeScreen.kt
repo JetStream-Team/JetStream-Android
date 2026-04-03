@@ -33,7 +33,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,8 +51,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -78,6 +82,8 @@ fun HomeScreen(navController: NavController) {
         onDisconnect = { viewModel.disconnect() },
         onDiscoverStart = { viewModel.startDiscovery() },
         onDiscoverStop = { viewModel.stopDiscovery() },
+        showPowerMenu = { viewModel.showPowerMenu() },
+        hidePowerMenu = { viewModel.hidePowerMenu() },
         sendLockMessage = { viewModel.sendLockMessage() },
         sendPowerOffMessage = { viewModel.sendPowerOffMessage() },
         sendRebootMessage = { viewModel.sendRebootMessage() }
@@ -95,6 +101,8 @@ fun HomeScreenContent(
     onDisconnect: () -> Unit,
     onDiscoverStart: () -> Unit,
     onDiscoverStop: () -> Unit,
+    showPowerMenu: () -> Unit,
+    hidePowerMenu: () -> Unit,
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
     sendRebootMessage: () -> Unit
@@ -104,7 +112,7 @@ fun HomeScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -144,13 +152,24 @@ fun HomeScreenContent(
             )
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        ActionTileGrid(
-            sendLockMessage,
-            sendPowerOffMessage,
-            sendRebootMessage
-        )
+        if (uiState.connected) {
+            ActionTileGrid(
+                uiState,
+                showPowerMenu,
+                hidePowerMenu,
+                sendLockMessage,
+                sendPowerOffMessage,
+                sendRebootMessage
+            )
+        } else {
+            Text(
+                "No Actions Available - Connect to a server",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                lineHeight = 32.sp,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
 
     }
 }
@@ -328,15 +347,15 @@ fun ConnectionSheet(
 
 @Composable
 fun ActionTileGrid(
+    uiState: HomeScreenState,
+    showPowerMenu: () -> Unit,
+    hidePowerMenu: () -> Unit,
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
     sendRebootMessage: () -> Unit
 ) {
     val actionTiles = listOf(
-        ActionTile("Lock", Icons.Rounded.Lock, sendLockMessage),
-        ActionTile("Poweroff", Icons.Rounded.PowerSettingsNew, sendPowerOffMessage),
-        ActionTile("Reboot", Icons.Rounded.RestartAlt, sendRebootMessage),
-        ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, {})
+        ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, showPowerMenu)
     )
     val actionTilesChunked = actionTiles.chunked(2)
     actionTilesChunked.forEach { actionTilesRow ->
@@ -377,6 +396,67 @@ fun ActionTileGrid(
             }
         }
     }
+
+    if (uiState.powerMenuVisible) {
+        PowerMenu(
+            hidePowerMenu,
+            sendLockMessage,
+            sendPowerOffMessage,
+            sendRebootMessage
+        )
+    }
+}
+
+@Composable
+fun PowerMenu(
+    hidePowerMenu: () -> Unit,
+    sendLockMessage: () -> Unit,
+    sendPowerOffMessage: () -> Unit,
+    sendRebootMessage: () -> Unit
+) {
+    val buttonHeight = 50.dp
+    val lowRounding = 4.dp
+    val highRounding = 18.dp
+
+    AlertDialog(
+        onDismissRequest = hidePowerMenu,
+        title = { Text("Power Menu") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                FilledTonalButton(
+                    onClick = { sendLockMessage(); hidePowerMenu() },
+                    modifier = Modifier.fillMaxWidth().height(buttonHeight),
+                    shape = RoundedCornerShape(highRounding, highRounding, lowRounding, lowRounding)
+                ) {
+                    Icon(Icons.Rounded.Lock, contentDescription = null)
+                    Spacer(Modifier.padding(4.dp))
+                    Text("Lock")
+                }
+                FilledTonalButton(
+                    onClick = { sendPowerOffMessage(); hidePowerMenu() },
+                    modifier = Modifier.fillMaxWidth().height(buttonHeight),
+                    shape = RoundedCornerShape(lowRounding)
+                ) {
+                    Icon(Icons.Rounded.PowerSettingsNew, contentDescription = null)
+                    Spacer(Modifier.padding(4.dp))
+                    Text("Power Off")
+                }
+                FilledTonalButton(
+                    onClick = { sendRebootMessage(); hidePowerMenu() },
+                    modifier = Modifier.fillMaxWidth().height(buttonHeight),
+                    shape = RoundedCornerShape(lowRounding, lowRounding, highRounding, highRounding)
+                ) {
+                    Icon(Icons.Rounded.RestartAlt, contentDescription = null)
+                    Spacer(Modifier.padding(4.dp))
+                    Text("Reboot")
+                }
+            }
+        },
+        confirmButton = {}
+    )
 }
 
 @Preview(showBackground = true)
@@ -394,6 +474,8 @@ fun HomeScreenPreview() {
                 onDisconnect = { },
                 onDiscoverStart = { },
                 onDiscoverStop = { },
+                showPowerMenu = { },
+                hidePowerMenu = { },
                 sendLockMessage = { },
                 sendPowerOffMessage = { },
                 sendRebootMessage = { }
@@ -415,6 +497,21 @@ fun ConnectionSheetPreview() {
                 onDisconnect = { },
                 onDiscoverStart = { },
                 onDiscoverStop = { }
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PowerMenuPreview() {
+    JetStreamTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            PowerMenu(
+                hidePowerMenu = { },
+                sendLockMessage = { },
+                sendPowerOffMessage = { },
+                sendRebootMessage = { }
             )
         }
     }
