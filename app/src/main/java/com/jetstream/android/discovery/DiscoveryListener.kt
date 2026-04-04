@@ -3,7 +3,7 @@ package com.jetstream.android.discovery
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
-import com.jetstream.android.service.ServerInfo
+import com.jetstream.android.services.jetstream.ServerInfo
 
 class DiscoveryListener(
     private val nsdManager: NsdManager,

@@ -9,10 +9,6 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,7 +18,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import com.jetstream.android.ui.theme.JetStreamTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,7 +27,7 @@ import com.jetstream.android.screens.settings.ClipboardSettingsScreen
 import com.jetstream.android.screens.settings.ConnectionSettingsScreen
 import com.jetstream.android.screens.settings.NotificationSettingsScreen
 import com.jetstream.android.screens.settings.SettingsScreen
-import com.jetstream.android.service.JetStreamService
+import com.jetstream.android.services.jetstream.JetStreamService
 
 object Routes {
     const val HOME = "home"

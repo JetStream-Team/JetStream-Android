@@ -1,7 +1,7 @@
 package com.jetstream.android.discovery
 
 import android.util.Log
-import com.jetstream.android.service.ServerInfo
+import com.jetstream.android.services.jetstream.ServerInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 

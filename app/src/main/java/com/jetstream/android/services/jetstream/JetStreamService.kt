@@ -1,4 +1,4 @@
-package com.jetstream.android.service
+package com.jetstream.android.services.jetstream
 
 import android.app.Notification
 import android.app.NotificationChannel

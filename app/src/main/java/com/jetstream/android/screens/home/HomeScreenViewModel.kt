@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.content.ClipDescription
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetstream.android.discovery.DiscoveryRepository
@@ -15,8 +14,8 @@ import com.jetstream.android.proto.Lock
 import com.jetstream.android.proto.MessageWrapper
 import com.jetstream.android.proto.Poweroff
 import com.jetstream.android.proto.Reboot
-import com.jetstream.android.service.JetStreamRepository
-import com.jetstream.android.service.ServerInfo
+import com.jetstream.android.services.jetstream.JetStreamRepository
+import com.jetstream.android.services.jetstream.ServerInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
