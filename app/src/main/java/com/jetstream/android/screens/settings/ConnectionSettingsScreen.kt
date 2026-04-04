@@ -40,29 +40,10 @@ fun ConnectionSettingsContent(
     onAutoConnectChange: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = "Connection Settings",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
+    Column() {
+        SettingsPageHeader("Connection Settings", onBack)
 
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Column(Modifier.fillMaxSize()) {
             SwitchItem("Auto Connect", autoConnect, onAutoConnectChange)
         }
     }

@@ -45,31 +45,12 @@ fun NotificationSettingsContent(
     onRespectDndChange: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = "Notification Settings",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
+    Column() {
+        SettingsPageHeader("Notification Settings", onBack)
 
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-        SwitchItem("Sync Notifications", syncNotifications, onSyncNotificationsChange)
-        SwitchItem("Respect Do Not Disturb", respectDnd, onRespectDndChange)
+        Column(Modifier.fillMaxSize()) {
+            SwitchItem("Sync Notifications", syncNotifications, onSyncNotificationsChange)
+            SwitchItem("Respect Do Not Disturb", respectDnd, onRespectDndChange)
         }
     }
 }
