@@ -1,12 +1,16 @@
 package com.jetstream.android.screens.home
 
 import android.app.Application
+import android.content.Context
+import android.content.ClipDescription
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetstream.android.discovery.DiscoveryRepository
 import com.jetstream.android.discovery.JetStreamDiscovery
 import com.jetstream.android.proto.Action
+import com.jetstream.android.proto.Clipboard
 import com.jetstream.android.proto.Lock
 import com.jetstream.android.proto.MessageWrapper
 import com.jetstream.android.proto.Poweroff
@@ -109,5 +113,21 @@ class HomeScreenViewModel(app: Application) : AndroidViewModel(app) {
         )
         JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
         Log.d(TAG, "Reboot message sent")
+    }
+
+    fun sendClipboard() {
+        val application = getApplication<Application>()
+        val clipboard = application.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+
+        if (!clipboard.hasPrimaryClip()) return
+        if (clipboard.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) != true) return
+
+        val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: return
+
+        val wrapper = MessageWrapper(
+            clipboard = Clipboard(content = text)
+        )
+        JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+        Log.d(TAG, "Clipboard content sent")
     }
 }

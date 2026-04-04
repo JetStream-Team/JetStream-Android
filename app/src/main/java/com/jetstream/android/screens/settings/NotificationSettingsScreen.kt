@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -27,31 +28,49 @@ fun NotificationSettingsScreen(navController: NavController) {
     val viewModel: AppPreferencesViewModel = viewModel()
     val syncNotifications by viewModel.syncNotifications.collectAsStateWithLifecycle()
     val respectDnd by viewModel.respectDnd.collectAsStateWithLifecycle()
+    NotificationSettingsContent(
+        syncNotifications = syncNotifications,
+        respectDnd = respectDnd,
+        onSyncNotificationsChange = { viewModel.setSyncNotifications(it) },
+        onRespectDndChange = { viewModel.setRespectDnd(it) },
+        onBack = { navController.popBackStack() }
+    )
+}
 
+@Composable
+fun NotificationSettingsContent(
+    syncNotifications: Boolean,
+    respectDnd: Boolean,
+    onSyncNotificationsChange: (Boolean) -> Unit,
+    onRespectDndChange: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
+            Spacer(Modifier.width(8.dp))
             Text(
-                text = "Connection Settings",
+                text = "Notification Settings",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        SwitchItem("Sync Notifications", syncNotifications) { viewModel.setSyncNotifications(it) }
-        SwitchItem("Respect Do Not Disturb", respectDnd) { viewModel.setRespectDnd(it) }
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+        SwitchItem("Sync Notifications", syncNotifications, onSyncNotificationsChange)
+        SwitchItem("Respect Do Not Disturb", respectDnd, onRespectDndChange)
+        }
     }
 }
 
@@ -60,7 +79,13 @@ fun NotificationSettingsScreen(navController: NavController) {
 fun NotificationScreenPreview() {
     JetStreamTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            NotificationSettingsScreen(rememberNavController())
+            NotificationSettingsContent(
+                syncNotifications = true,
+                respectDnd = false,
+                onSyncNotificationsChange = {},
+                onRespectDndChange = {},
+                onBack = {}
+            )
         }
     }
 }

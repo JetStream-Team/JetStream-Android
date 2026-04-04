@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.ContentPasteGo
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.RestartAlt
@@ -86,7 +87,8 @@ fun HomeScreen(navController: NavController) {
         hidePowerMenu = { viewModel.hidePowerMenu() },
         sendLockMessage = { viewModel.sendLockMessage() },
         sendPowerOffMessage = { viewModel.sendPowerOffMessage() },
-        sendRebootMessage = { viewModel.sendRebootMessage() }
+        sendRebootMessage = { viewModel.sendRebootMessage() },
+        sendClipboard = { viewModel.sendClipboard() }
     )
 }
 
@@ -105,7 +107,8 @@ fun HomeScreenContent(
     hidePowerMenu: () -> Unit,
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
-    sendRebootMessage: () -> Unit
+    sendRebootMessage: () -> Unit,
+    sendClipboard: () -> Unit
 ) {
 
     Column(
@@ -159,7 +162,8 @@ fun HomeScreenContent(
                 hidePowerMenu,
                 sendLockMessage,
                 sendPowerOffMessage,
-                sendRebootMessage
+                sendRebootMessage,
+                sendClipboard
             )
         } else {
             Text(
@@ -352,10 +356,12 @@ fun ActionTileGrid(
     hidePowerMenu: () -> Unit,
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
-    sendRebootMessage: () -> Unit
+    sendRebootMessage: () -> Unit,
+    sendClipboard: () -> Unit
 ) {
     val actionTiles = listOf(
-        ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, showPowerMenu)
+        ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, showPowerMenu),
+        ActionTile("Send Clipboard", Icons.Rounded.ContentPasteGo, sendClipboard),
     )
     val actionTilesChunked = actionTiles.chunked(2)
     actionTilesChunked.forEach { actionTilesRow ->
@@ -380,8 +386,10 @@ fun ActionTileGrid(
                     ) {
                         Icon(
                             imageVector = actionTile.icon,
-                            contentDescription = null,
-                            modifier = Modifier.align(Alignment.TopStart)
+                            contentDescription = actionTile.label,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .size(28.dp),
                         )
                         Text(
                             actionTile.label,
@@ -465,7 +473,7 @@ fun HomeScreenPreview() {
     JetStreamTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
             HomeScreenContent(
-                HomeScreenState(),
+                HomeScreenState(connected = true),
                 gotoSettings = { },
                 showConnectionSheet = { },
                 hideConnectionSheet = { },
@@ -478,7 +486,8 @@ fun HomeScreenPreview() {
                 hidePowerMenu = { },
                 sendLockMessage = { },
                 sendPowerOffMessage = { },
-                sendRebootMessage = { }
+                sendRebootMessage = { },
+                sendClipboard = { }
             )
         }
     }

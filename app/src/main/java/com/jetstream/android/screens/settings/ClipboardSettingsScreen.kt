@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -27,31 +28,44 @@ fun ClipboardSettingsScreen(navController: NavController) {
     val viewModel: AppPreferencesViewModel = viewModel()
     val syncClipboard by viewModel.syncClipboard.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    ClipboardSettingsContent(
+        syncClipboard = syncClipboard,
+        onSyncClipboardChange = { viewModel.setSyncClipboard(it) },
+        onBack = { navController.popBackStack() }
+    )
+}
 
+@Composable
+fun ClipboardSettingsContent(
+    syncClipboard: Boolean,
+    onSyncClipboardChange: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
+            Spacer(Modifier.width(8.dp))
             Text(
-                text = "Connection Settings",
+                text = "Clipboard Settings",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        var checked by remember { mutableStateOf(false) }
-
-        SwitchItem("Sync Clipboard", syncClipboard) { viewModel.setSyncClipboard(it) }
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SwitchItem("Sync Clipboard", syncClipboard, onSyncClipboardChange)
+        }
     }
 }
 
@@ -60,7 +74,11 @@ fun ClipboardSettingsScreen(navController: NavController) {
 fun ClipboardScreenPreview() {
     JetStreamTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            ClipboardSettingsScreen(rememberNavController())
+            ClipboardSettingsContent(
+                syncClipboard = true,
+                onSyncClipboardChange = {},
+                onBack = {}
+            )
         }
     }
 }

@@ -105,7 +105,7 @@ fun SwitchItem(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Un
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(16.dp, 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)

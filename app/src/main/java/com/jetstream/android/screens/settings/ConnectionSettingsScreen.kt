@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -26,20 +27,32 @@ import com.jetstream.android.ui.theme.JetStreamTheme
 fun ConnectionSettingsScreen(navController: NavController) {
     val viewModel: AppPreferencesViewModel = viewModel()
     val autoConnect by viewModel.autoConnect.collectAsStateWithLifecycle()
+    ConnectionSettingsContent(
+        autoConnect = autoConnect,
+        onAutoConnectChange = { viewModel.setAutoConnect(it) },
+        onBack = { navController.popBackStack() }
+    )
+}
 
+@Composable
+fun ConnectionSettingsContent(
+    autoConnect: Boolean,
+    onAutoConnectChange: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = "Connection Settings",
                 style = MaterialTheme.typography.headlineSmall,
@@ -47,9 +60,11 @@ fun ConnectionSettingsScreen(navController: NavController) {
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        SwitchItem("Auto Connect", autoConnect) { viewModel.setAutoConnect(it) }
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SwitchItem("Auto Connect", autoConnect, onAutoConnectChange)
+        }
     }
 }
 
@@ -58,7 +73,11 @@ fun ConnectionSettingsScreen(navController: NavController) {
 fun ConnectionScreenPreview() {
     JetStreamTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            ConnectionSettingsScreen(rememberNavController())
+            ConnectionSettingsContent(
+                autoConnect = true,
+                onAutoConnectChange = {},
+                onBack = {}
+            )
         }
     }
 }
