@@ -1,4 +1,4 @@
-package com.jetstream.android.screens.home
+package com.jetstream.android.screens.home.presentation
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

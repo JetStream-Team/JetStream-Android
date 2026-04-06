@@ -23,7 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jetstream.android.screens.home.HomeScreen
-import com.jetstream.android.screens.home.PresentationRemoteScreen
+import com.jetstream.android.screens.home.presentation.PresentationRemoteScreen
 import com.jetstream.android.screens.settings.ClipboardSettingsScreen
 import com.jetstream.android.screens.settings.ConnectionSettingsScreen
 import com.jetstream.android.screens.settings.NotificationSettingsScreen

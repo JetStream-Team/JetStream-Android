@@ -370,42 +370,46 @@ fun ActionTileGrid(
         ActionTile("Presentation Remote", Icons.Rounded.SettingsRemote, gotoPresentationRemote)
     )
     val actionTilesChunked = actionTiles.chunked(2)
-    actionTilesChunked.forEach { actionTilesRow ->
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            actionTilesRow.forEach { actionTile ->
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    ),
-                    onClick = actionTile.onClick,
-                ) {
-                    Box(
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        actionTilesChunked.forEach { actionTilesRow ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                actionTilesRow.forEach { actionTile ->
+                    Card(
                         modifier = Modifier
-                            .padding(18.dp)
-                            .fillMaxSize()
+                            .weight(1f)
+                            .aspectRatio(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        onClick = actionTile.onClick,
                     ) {
-                        Icon(
-                            imageVector = actionTile.icon,
-                            contentDescription = actionTile.label,
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .size(28.dp),
-                        )
-                        Text(
-                            actionTile.label,
-                            modifier = Modifier.align(Alignment.BottomStart)
-                        )
+                                .padding(18.dp)
+                                .fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = actionTile.icon,
+                                contentDescription = actionTile.label,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .size(28.dp),
+                            )
+                            Text(
+                                actionTile.label,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                        }
                     }
-                }
 
-                if (actionTilesRow.count() < 2) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    if (actionTilesRow.count() < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.jetstream.android.services.jetstream
 
+import android.content.Context
 import android.util.Log
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -7,6 +8,7 @@ import okhttp3.WebSocketListener
 import okio.ByteString
 
 class WSListener(
+    private val context: Context,
     private val serverIp: String,
     private val port: Int,
     private val updateNotification: (String) -> Unit,
@@ -28,7 +30,7 @@ class WSListener(
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         Log.d(TAG, "Binary message received: ${bytes.size} bytes")
-        protoMessageHandler(bytes)
+        protoMessageHandler(bytes, context)
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {

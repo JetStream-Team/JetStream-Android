@@ -93,7 +93,13 @@ class JetStreamService : Service() {
         Log.d(TAG, "Connecting to $url")
         webSocket = client.newWebSocket(
             request,
-            WSListener(serverIp, port, ::updateNotification, ::clearWebSocket)
+            WSListener(
+                this@JetStreamService,
+                serverIp,
+                port,
+                ::updateNotification,
+                ::clearWebSocket
+            )
         )
     }
 
