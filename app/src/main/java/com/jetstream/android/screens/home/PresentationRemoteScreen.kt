@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Fullscreen
+import androidx.compose.material.icons.rounded.PresentToAll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ fun PresentationRemoteScreen(navController: NavController) {
         onBack = { navController.popBackStack() },
         onPrevious = { viewModel.sendPresentationPrevious() },
         onNext = { viewModel.sendPresentationNext() },
+        onPresent = { viewModel.sendPresentationPresent() },
         onFullscreen = { viewModel.sendPresentationFullscreen() },
         onVisibility = { viewModel.sendPresentationVisibility() }
     )
@@ -49,6 +51,7 @@ fun PresentationRemoteContent(
     onBack: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onPresent: () -> Unit,
     onFullscreen: () -> Unit,
     onVisibility: () -> Unit
 ) {
@@ -108,6 +111,19 @@ fun PresentationRemoteContent(
                         .weight(1f)
                         .fillMaxHeight(),
                     shape = RoundedCornerShape(lowRounding),
+                    onClick = onPresent
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PresentToAll,
+                        contentDescription = "Present to All",
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+                ElevatedButton (
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(lowRounding),
                     onClick = onFullscreen
                 ) {
                     Icon(
@@ -143,6 +159,7 @@ fun PresentationRemoteScreenPreview() {
                 onBack = { },
                 onPrevious = { },
                 onNext = { },
+                onPresent = { },
                 onFullscreen = { },
                 onVisibility = { }
             )

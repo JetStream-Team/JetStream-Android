@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.jetstream.android.proto.Fullscreen
 import com.jetstream.android.proto.MessageWrapper
 import com.jetstream.android.proto.NextSlide
+import com.jetstream.android.proto.Present
 import com.jetstream.android.proto.Presentation
 import com.jetstream.android.proto.PrevSlide
 import com.jetstream.android.proto.Visibility
@@ -33,6 +34,15 @@ class PresentationRemoteScreenViewModel: ViewModel() {
         Log.d(TAG, "Next slide message sent")
     }
 
+    fun sendPresentationPresent() {
+        val wrapper = MessageWrapper(
+            presentation = Presentation(
+                present = Present()
+            )
+        )
+        JetStreamRepository.wsSend(MessageWrapper.ADAPTER.encode(wrapper))
+        Log.d(TAG, "Present to all message sent")
+    }
     fun sendPresentationFullscreen() {
         val wrapper = MessageWrapper(
             presentation = Presentation(
