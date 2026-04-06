@@ -118,7 +118,7 @@ fun SwitchItem(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Un
 }
 
 @Composable
-fun SettingsPageHeader(
+fun StandardPageHeader(
     title: String,
     onBack: () -> Unit,
 ) {

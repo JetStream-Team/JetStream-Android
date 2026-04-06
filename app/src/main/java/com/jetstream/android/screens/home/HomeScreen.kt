@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.ContentPasteGo
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,7 +89,8 @@ fun HomeScreen(navController: NavController) {
         sendLockMessage = { viewModel.sendLockMessage() },
         sendPowerOffMessage = { viewModel.sendPowerOffMessage() },
         sendRebootMessage = { viewModel.sendRebootMessage() },
-        sendClipboard = { viewModel.sendClipboard() }
+        sendClipboard = { viewModel.sendClipboard() },
+        gotoPresentationRemote = { navController.navigate(Routes.HOME_PRESENTATION)}
     )
 }
 
@@ -108,7 +110,8 @@ fun HomeScreenContent(
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
     sendRebootMessage: () -> Unit,
-    sendClipboard: () -> Unit
+    sendClipboard: () -> Unit,
+    gotoPresentationRemote: () -> Unit
 ) {
 
     Column(
@@ -163,7 +166,8 @@ fun HomeScreenContent(
                 sendLockMessage,
                 sendPowerOffMessage,
                 sendRebootMessage,
-                sendClipboard
+                sendClipboard,
+                gotoPresentationRemote
             )
         } else {
             Text(
@@ -357,11 +361,13 @@ fun ActionTileGrid(
     sendLockMessage: () -> Unit,
     sendPowerOffMessage: () -> Unit,
     sendRebootMessage: () -> Unit,
-    sendClipboard: () -> Unit
+    sendClipboard: () -> Unit,
+    gotoPresentationRemote: () -> Unit
 ) {
     val actionTiles = listOf(
         ActionTile("PowerMenu", Icons.Rounded.PowerSettingsNew, showPowerMenu),
         ActionTile("Send Clipboard", Icons.Rounded.ContentPasteGo, sendClipboard),
+        ActionTile("Presentation Remote", Icons.Rounded.SettingsRemote, gotoPresentationRemote)
     )
     val actionTilesChunked = actionTiles.chunked(2)
     actionTilesChunked.forEach { actionTilesRow ->
@@ -487,7 +493,8 @@ fun HomeScreenPreview() {
                 sendLockMessage = { },
                 sendPowerOffMessage = { },
                 sendRebootMessage = { },
-                sendClipboard = { }
+                sendClipboard = { },
+                gotoPresentationRemote = { }
             )
         }
     }

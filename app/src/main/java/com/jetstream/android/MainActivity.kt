@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jetstream.android.screens.home.HomeScreen
+import com.jetstream.android.screens.home.PresentationRemoteScreen
 import com.jetstream.android.screens.settings.ClipboardSettingsScreen
 import com.jetstream.android.screens.settings.ConnectionSettingsScreen
 import com.jetstream.android.screens.settings.NotificationSettingsScreen
@@ -31,6 +32,7 @@ import com.jetstream.android.services.jetstream.JetStreamService
 
 object Routes {
     const val HOME = "home"
+    const val HOME_PRESENTATION = "home/presentation"
     const val SETTINGS = "settings"
     const val SETTINGS_CONNECTION = "settings/connection"
     const val SETTINGS_NOTIFICATION = "settings/notification"
@@ -80,6 +82,7 @@ fun AppNavigation() {
         },
     ) {
         composable(Routes.HOME) { HomeScreen(navController) }
+        composable(Routes.HOME_PRESENTATION) { PresentationRemoteScreen(navController) }
         composable(Routes.SETTINGS) { SettingsScreen(navController) }
         composable(Routes.SETTINGS_CONNECTION) { ConnectionSettingsScreen(navController) }
         composable(Routes.SETTINGS_NOTIFICATION) { NotificationSettingsScreen(navController) }
